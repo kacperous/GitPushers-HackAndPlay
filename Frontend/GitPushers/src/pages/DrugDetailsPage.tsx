@@ -1,20 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { useState, useEffect, useRef } from "react"
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
 import { ArrowLeft, Pill, Package, DollarSign, FileText, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { drugService, type DrugFromAPI } from "@/services/drugService"
 
 export default function DrugDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const alternativesRef = useRef<HTMLDivElement>(null)
   const [drug, setDrug] = useState<DrugFromAPI | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isHighlighted, setIsHighlighted] = useState(false)
+  
+  // State for alternatives
+  const [alternatives, setAlternatives] = useState<DrugFromAPI[]>([])
+  const [isLoadingAlternatives, setIsLoadingAlternatives] = useState(false)
+  const [alternativesError, setAlternativesError] = useState<string | null>(null)
+  
+  // Check if we should scroll to alternatives
+  const shouldScrollToAlternatives = searchParams.get('scrollTo') === 'alternatives'
 
   useEffect(() => {
     const fetchDrugDetails = async () => {
@@ -27,6 +39,22 @@ export default function DrugDetailsPage() {
       try {
         const drugData = await drugService.getDrugById(parseInt(id))
         setDrug(drugData)
+        
+        // Fetch alternatives using displayName
+        const displayName = drugService.getDrugDisplayName(drugData)
+        if (displayName && displayName !== 'Brak nazwy') {
+          setIsLoadingAlternatives(true)
+          try {
+            const alts = await drugService.getAlternativesBySubstance(displayName)
+            // Filter out the current drug from alternatives
+            setAlternatives(alts.filter(alt => alt.id !== drugData.id))
+            setAlternativesError(null)
+          } catch (err) {
+            setAlternativesError(err instanceof Error ? err.message : "Nie udało się pobrać zamienników")
+          } finally {
+            setIsLoadingAlternatives(false)
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Nie udało się pobrać danych leku")
       } finally {
@@ -36,6 +64,18 @@ export default function DrugDetailsPage() {
 
     fetchDrugDetails()
   }, [id])
+  
+  // Scroll to alternatives section when data is loaded and scrollTo parameter is present
+  useEffect(() => {
+    if (shouldScrollToAlternatives && !isLoadingAlternatives && alternativesRef.current) {
+      setTimeout(() => {
+        alternativesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setIsHighlighted(true)
+        // Remove highlight after 3 seconds
+        setTimeout(() => setIsHighlighted(false), 3000)
+      }, 100)
+    }
+  }, [shouldScrollToAlternatives, isLoadingAlternatives])
 
   if (isLoading) {
     return (
@@ -218,11 +258,94 @@ export default function DrugDetailsPage() {
                 <span className="font-medium text-muted-foreground">Ostatnia aktualizacja:</span>
                 <span>{new Date(drug.updated_at).toLocaleDateString('pl-PL')}</span>
               </div>
-            </CardContent>
+              </CardContent>
           </Card>
+
+          {/* Alternatives Section */}
+          {(drug.nazwa_powszechnie_stosowana || drug.nazwa_produktu_leczniczego) && (
+            <Card 
+              ref={alternativesRef}
+              className={`transition-all duration-300 ${isHighlighted ? "ring-2 ring-primary shadow-lg" : ""}`}
+            >
+              <CardHeader>
+                <CardTitle>Zamienniki</CardTitle>
+                <CardDescription>
+                  Leki o nazwie: {displayName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingAlternatives ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">Ładowanie zamienników...</p>
+                  </div>
+                ) : alternativesError ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>{alternativesError}</AlertDescription>
+                  </Alert>
+                ) : alternatives.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Pill className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Brak dostępnych zamienników</p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nazwa</TableHead>
+                          <TableHead>Moc</TableHead>
+                          <TableHead>Droga podania</TableHead>
+                          <TableHead>Producent</TableHead>
+                          <TableHead className="text-right">Cena</TableHead>
+                          <TableHead className="text-right">Stan</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {alternatives.map((alt) => {
+                          const altDisplayName = drugService.getDrugDisplayName(alt)
+                          const altFormattedPrice = drugService.getFormattedPrice(alt.cena)
+                          const altIsLowStock = drugService.isLowStock(alt.ilosc)
+                          
+                          return (
+                            <TableRow key={alt.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/details/${alt.id}`)}>
+                              <TableCell className="font-medium">{altDisplayName}</TableCell>
+                              <TableCell>{alt.moc || '-'}</TableCell>
+                              <TableCell className="text-sm">{alt.droga_podania_gatunek_tkanka_okres_karencji || '-'}</TableCell>
+                              <TableCell className="text-sm">{alt.podmiot_odpowiedzialny || alt.nazwa_wytw_rcy || '-'}</TableCell>
+                              <TableCell className="text-right font-semibold text-primary">{altFormattedPrice}</TableCell>
+                              <TableCell className="text-right">
+                                {altIsLowStock ? (
+                                  <Badge variant="destructive" className="gap-1">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    {alt.ilosc} szt.
+                                  </Badge>
+                                ) : (
+                                  <span className="font-medium">{alt.ilosc} szt.</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" onClick={(e) => {
+                                  e.stopPropagation()
+                                  navigate(`/details/${alt.id}`)
+                                }}>
+                                  Zobacz
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
   )
 }
-
