@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'security',
     'scraper',
     'pharmac',
+    'regulations',
     'drf_spectacular',
     'news',
 ]
