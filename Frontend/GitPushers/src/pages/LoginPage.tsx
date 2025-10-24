@@ -1,206 +1,242 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService, type LoginData } from '../services/authService';
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Container,
-  Alert,
-  Divider,
-  Link,
-  Paper,
-} from '@mui/material';
+import type React from "react"
 
-import PasswordInput from '../components/PasswordInput';
+import { useState } from "react"
+import { useNavigate } from 'react-router-dom'
+import { Mail, Lock, ArrowLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-interface LoginFormData extends LoginData {}
+interface LoginFormData {
+  email: string
+  password: string
+}
 
-const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
+interface LoginPageProps {
+  onLogin?: (formData: LoginFormData) => void
+  onBackToHome?: () => void
+  onGoToRegister?: () => void
+}
+
+export default function LoginPage({ onLogin, onBackToHome, onGoToRegister }: LoginPageProps) {
   const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: '',
-  });
-  
-  const [errors, setErrors] = useState<Partial<LoginFormData>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
+    email: "",
+    password: "",
+  })
+
+  const [errors, setErrors] = useState<Partial<LoginFormData>>({})
+  const [isLoading, setIsLoading] = useState(false)
+  const [loginError, setLoginError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const validateForm = (): boolean => {
-    // ... (logika walidacji bez zmian)
-    const newErrors: Partial<LoginFormData> = {};
+    const newErrors: Partial<LoginFormData> = {}
     if (!formData.email) {
-      newErrors.email = 'Email jest wymagany';
+      newErrors.email = "Email jest wymagany"
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email jest nieprawidłowy';
+      newErrors.email = "Email jest nieprawidłowy"
     }
     if (!formData.password) {
-      newErrors.password = 'Hasło jest wymagane';
+      newErrors.password = "Hasło jest wymagane"
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Hasło musi mieć co najmniej 6 znaków';
+      newErrors.password = "Hasło musi mieć co najmniej 6 znaków"
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
-  const handleInputChange = (field: keyof LoginFormData) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
+  const handleInputChange = (field: keyof LoginFormData) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
       ...prev,
       [field]: event.target.value,
-    }));
-    
+    }))
+
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
         [field]: undefined,
-      }));
+      }))
     }
-    setLoginError('');
-  };
+    setLoginError("")
+  }
 
   const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!validateForm()) return;
-    setIsLoading(true);
-    setLoginError('');
+    event.preventDefault()
+    if (!validateForm()) return
+
+    setIsLoading(true)
+    setLoginError("")
+
     try {
-      const response = await authService.login(formData);
-      console.log('Login successful:', response);
-      navigate('/');
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      console.log("Login successful:", formData)
+      if (onLogin) {
+        onLogin(formData)
+      }
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Wystąpił błąd podczas logowania. Spróbuj ponownie.');
+      setLoginError(error instanceof Error ? error.message : "Wystąpił błąd podczas logowania. Spróbuj ponownie.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  // USUNIĘTE: Ta funkcja została przeniesiona do PasswordInput
-  // const handleTogglePasswordVisibility = () => {
-  //   setShowPassword(!showPassword);
-  // };
-
-  return (
-    <Container component="main" maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          minHeight: '100vh',
+  // Internal small component to render Back to Home button.
+  // Uses parent's onBackToHome if provided, otherwise navigates to '/'.
+  const BackToHomeButton: React.FC<{ onBackToHome?: () => void }> = ({ onBackToHome }) => {
+    const navigate = useNavigate()
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full gap-2 bg-transparent"
+        onClick={(e) => {
+          e.preventDefault()
+          if (onBackToHome) onBackToHome()
+          else navigate('/')
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-            borderRadius: 2,
-          }}
-        >
-          {/* Header (bez zmian) */}
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography component="h1" variant="h4" gutterBottom>
-              Zaloguj się
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Wprowadź swoje dane, aby uzyskać dostęp do konta
-            </Typography>
-          </Box>
+        <ArrowLeft className="h-4 w-4" />
+        Powrót do strony głównej
+      </Button>
+    )
+  }
 
-          {/* Login Form (bez zmian) */}
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mt: 1 }}>
-            {loginError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {loginError}
-              </Alert>
-            )}
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        {/* Login Card */}
+        <Card className="border-border shadow-lg">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl font-bold">Zaloguj się</CardTitle>
+            <CardDescription>Wprowadź swoje dane, aby uzyskać dostęp do konta</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Error Alert */}
+              {loginError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{loginError}</AlertDescription>
+                </Alert>
+              )}
 
-            {/* Pole Email (bez zmian) */}
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Adres email"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={formData.email}
-              onChange={handleInputChange('email')}
-              error={!!errors.email}
-              helperText={errors.email}
-              placeholder="Wprowadź swój email"
-            />
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Adres email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Wprowadź swój email"
+                    value={formData.email}
+                    onChange={handleInputChange("email")}
+                    className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                    autoComplete="email"
+                    autoFocus
+                  />
+                </div>
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+              </div>
 
-            <PasswordInput
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Hasło"
-              id="password"
-              autoComplete="current-password"
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              error={!!errors.password}
-              helperText={errors.password}
-              placeholder="Wprowadź swoje hasło"
-            />
-            
-            {/* Przycisk i reszta formularza (bez zmian) */}
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Logowanie...' : 'Zaloguj się'}
-            </Button>
+              {/* Password Field */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Hasło
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Wprowadź swoje hasło"
+                    value={formData.password}
+                    onChange={handleInputChange("password")}
+                    className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+              </div>
 
-            <Divider sx={{ my: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                lub
-              </Typography>
-            </Divider>
-
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Link href="#" variant="body2" sx={{ display: 'block', mb: 1 }}>
-                Zapomniałeś hasła?
-              </Link>
-              <Link 
-                href="#" 
-                variant="body2" 
-                sx={{ display: 'block', mb: 2 }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/register');
-                }}
-              >
-                Nie masz konta? Zarejestruj się
-              </Link>
-              
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/')}
-                sx={{ mt: 1 }}
-              >
-                Powrót do strony głównej
+              {/* Submit Button */}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logowanie..." : "Zaloguj się"}
               </Button>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
-  );
-};
 
-export default LoginPage;
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">lub</span>
+                </div>
+              </div>
+
+              {/* Links */}
+              <div className="space-y-2 text-center text-sm">
+                <a href="#" className="text-primary hover:underline block">
+                  Zapomniałeś hasła?
+                </a>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (onGoToRegister) onGoToRegister()
+                  }}
+                  className="text-primary hover:underline block w-full"
+                >
+                  Nie masz konta? Zarejestruj się
+                </button>
+              </div>
+
+              {/* Back to Home Button - always visible; if parent provides onBackToHome it will be used, otherwise navigate to '/' */}
+              <BackToHomeButton onBackToHome={onBackToHome} />
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

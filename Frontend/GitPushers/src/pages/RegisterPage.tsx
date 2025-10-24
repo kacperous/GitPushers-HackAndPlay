@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useNavigate } from 'react-router-dom'
 import { authService, type RegisterData } from "@/services/authService"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -100,6 +101,44 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const BackToHomeButton: React.FC<{ onBackToHome?: () => void }> = ({ onBackToHome }) => {
+    const navigate = useNavigate()
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        className="w-full gap-2"
+        onClick={(e) => {
+          e.preventDefault()
+          if (onBackToHome) onBackToHome()
+          else navigate('/')
+        }}
+      >
+        <Home className="h-4 w-4" />
+        Powrót do strony głównej
+      </Button>
+    )
+  }
+
+  const BackToLoginButton: React.FC<{ onBackToLogin?: () => void }> = ({ onBackToLogin }) => {
+    const navigate = useNavigate()
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full gap-2 bg-transparent"
+        onClick={(e) => {
+          e.preventDefault()
+          if (onBackToLogin) onBackToLogin()
+          else navigate('/login')
+        }}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Masz już konto? Zaloguj się
+      </Button>
+    )
   }
 
   return (
@@ -271,19 +310,9 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
             </div>
 
             <div className="space-y-3">
-              {onBackToLogin && (
-                <Button type="button" variant="outline" className="w-full gap-2 bg-transparent" onClick={onBackToLogin}>
-                  <ArrowLeft className="h-4 w-4" />
-                  Masz już konto? Zaloguj się
-                </Button>
-              )}
+              <BackToLoginButton onBackToLogin={onBackToLogin} />
 
-              {onBackToHome && (
-                <Button type="button" variant="ghost" className="w-full gap-2" onClick={onBackToHome}>
-                  <Home className="h-4 w-4" />
-                  Powrót do strony głównej
-                </Button>
-              )}
+              <BackToHomeButton onBackToHome={onBackToHome} />
             </div>
           </CardContent>
         </Card>

@@ -4,13 +4,13 @@ import RegisterPage from './pages/RegisterPage';
 import UserProfile from './pages/UserProfile';
 import MapPage from './pages/MapPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import MainPage from './pages/MainPage';
+import HomePage from './pages/HomePage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainPage />} />
+  <Route path="/" element={<HomePage />} />
         
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
