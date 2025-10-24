@@ -20,6 +20,7 @@ services:
       - ./security/migrations:/app/security/migrations
       - ./news/migrations:/app/news/migrations
       - ./scraper/migrations:/app/scraper/migrations
+      - ./pharmac/migrations:/app/pharmac/migrations
     depends_on:
       db_hackathon:
         condition: service_healthy

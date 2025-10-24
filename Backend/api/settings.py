@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'security',
     'scraper',
+    'pharmac',
     'drf_spectacular',
     'news',
 ]
