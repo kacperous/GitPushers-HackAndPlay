@@ -43,7 +43,7 @@ class Command(BaseCommand):
             # Show recent records count
             recent_count = DrugEvent.objects.filter(
                 source=DrugEvent.DataSource.GIF,
-                publication_date__gte=timezone.now().date() - timedelta(days=10)
+                publication_date__gte=timezone.now().date() - timedelta(days=310)
             ).count()
             self.stdout.write(f'   - GIF records (last 10 days): {recent_count}')
             
