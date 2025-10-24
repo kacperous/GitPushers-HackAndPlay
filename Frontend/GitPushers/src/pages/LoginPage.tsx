@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { authService } from "@/services/authService"
 
 interface LoginFormData {
   email: string
@@ -20,6 +21,7 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onLogin, onBackToHome, onGoToRegister }: LoginPageProps) {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -69,12 +71,21 @@ export default function LoginPage({ onLogin, onBackToHome, onGoToRegister }: Log
     setLoginError("")
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Login successful:", formData)
+      // Use authService to login
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      console.log("Login successful:", response)
+      
+      // Call parent callback if provided
       if (onLogin) {
         onLogin(formData)
       }
+
+      // Navigate to main page after successful login
+      navigate('/')
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "Wystąpił błąd podczas logowania. Spróbuj ponownie.")
     } finally {

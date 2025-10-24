@@ -2,13 +2,16 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { authService, type UserData } from "@/services/authService"
 import {
   Search,
   Pill,
   Newspaper,
   LogIn,
+  LogOut,
+  User,
   Menu,
   AlertTriangle,
   Calendar,
@@ -424,11 +427,39 @@ const legalChanges: LegalChange[] = [
 
 // ============= KOMPONENT GŁÓWNY =============
 export default function MainPage() {
+  const navigate = useNavigate()
   const [activeView, setActiveView] = useState<"drugs" | "news">("drugs")
   const [drugSearch, setDrugSearch] = useState("")
   const [newsFilter, setNewsFilter] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
+
+  // Pobierz dane użytkownika przy załadowaniu
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (authService.isAuthenticated()) {
+        try {
+          const userData = await authService.getCurrentUser()
+          setCurrentUser(userData)
+        } catch (error) {
+          console.error("Błąd pobierania danych użytkownika:", error)
+          // Jeśli błąd, wyloguj użytkownika (token może być nieprawidłowy)
+          authService.logout()
+        }
+      }
+      setIsLoadingUser(false)
+    }
+
+    fetchUser()
+  }, [])
+
+  const handleLogout = () => {
+    authService.logout()
+    setCurrentUser(null)
+    navigate('/login')
+  }
 
   const filteredDrugs = drugDatabase.filter(
     (drug) =>
@@ -501,12 +532,37 @@ export default function MainPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link to="/login">
-              <Button variant="outline" className="gap-2">
-                <LogIn className="h-4 w-4" />
-                <span className="hidden sm:inline">Zaloguj się</span>
-              </Button>
-            </Link>
+            {!isLoadingUser && (
+              currentUser ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      <User className="h-4 w-4" />
+                      <span className="hidden sm:inline">
+                        Witaj, {currentUser.first_name} {currentUser.last_name}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Wyloguj się
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/login">
+                  <Button variant="outline" className="gap-2">
+                    <LogIn className="h-4 w-4" />
+                    <span className="hidden sm:inline">Zaloguj się</span>
+                  </Button>
+                </Link>
+              )
+            )}
           </div>
         </div>
       </header>

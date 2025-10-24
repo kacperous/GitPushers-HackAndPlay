@@ -21,6 +21,7 @@ interface RegisterPageProps {
 }
 
 const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, onBackToHome }) => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<RegisterFormData>({
     first_name: "",
     last_name: "",
@@ -93,9 +94,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
     try {
       const response = await authService.register(formData)
       console.log("Registration successful:", response)
+      
+      // Call parent callback if provided
       if (onRegister) {
         onRegister(formData)
       }
+
+      // Navigate to main page after successful registration
+      navigate('/main')
     } catch (error) {
       setRegisterError(error instanceof Error ? error.message : "Wystąpił błąd podczas rejestracji. Spróbuj ponownie.")
     } finally {
