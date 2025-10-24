@@ -1,5 +1,8 @@
 import { useState } from 'react';
-// import SplitText from "./SplitText"; // Możesz usunąć tę linię, jeśli już jej nie potrzebujesz
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import UserProfile from './pages/UserProfile';
+import { authService } from './services/authService';
 
 // Importy komponentów Material UI
 import AppBar from '@mui/material/AppBar';
@@ -10,10 +13,58 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid'; // Do responsywnego układu
+import Grid from '@mui/material/Grid';
 
 function App() {
   const [count, setCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'register' | 'profile'>('home');
+  const [isLoggedIn, setIsLoggedIn] = useState(authService.isAuthenticated());
+
+  const handleLogin = (formData: { email: string; password: string }) => {
+    console.log('Login successful:', formData);
+    setIsLoggedIn(true);
+    setCurrentPage('home');
+  };
+
+  const handleRegister = (formData: { first_name: string; last_name: string; email: string; password: string; password2: string; account_type: 'doctor' | 'pharmacy' }) => {
+    console.log('Registration successful:', formData);
+    setIsLoggedIn(true);
+    setCurrentPage('home');
+  };
+
+  const handleBackToHome = () => {
+    setCurrentPage('home');
+  };
+
+  const handleGoToLogin = () => {
+    setCurrentPage('login');
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsLoggedIn(false);
+    setCurrentPage('home');
+  };
+
+  const handleGoToProfile = () => {
+    setCurrentPage('profile');
+  };
+
+  const handleGoToRegister = () => {
+    setCurrentPage('register');
+  };
+
+  if (currentPage === 'login') {
+    return <LoginPage onLogin={handleLogin} onBackToHome={handleBackToHome} onGoToRegister={handleGoToRegister} />;
+  }
+
+  if (currentPage === 'register') {
+    return <RegisterPage onRegister={handleRegister} onBackToLogin={handleGoToLogin} onBackToHome={handleBackToHome} />;
+  }
+
+  if (currentPage === 'profile') {
+    return <UserProfile onBackToHome={handleBackToHome} />;
+  }
 
   return (
     // Box to uniwersalny komponent do układu, często używany jako wrapper
@@ -24,7 +75,19 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Moja Aplikacja MUI
           </Typography>
-          <Button color="inherit" onClick={() => alert('Witaj!')}>Logowanie</Button>
+          <Button color="inherit" onClick={isLoggedIn ? handleLogout : () => setCurrentPage('login')} sx={{ mr: 1 }}>
+            {isLoggedIn ? 'Wyloguj się' : 'Logowanie'}
+          </Button>
+          {!isLoggedIn && (
+            <Button color="inherit" onClick={() => setCurrentPage('register')} sx={{ mr: 1 }}>
+              Rejestracja
+            </Button>
+          )}
+          {isLoggedIn && (
+            <Button color="inherit" onClick={handleGoToProfile}>
+              Profil
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
 
