@@ -8,15 +8,15 @@ import { Box, Typography, Paper, CircularProgress } from '@mui/material'; // 2. 
 
 // --- STYL MAPY ---
 const containerStyle = {
-  width: '600px',
-  height: '600px', // Możesz dostosować wysokość
+  width: '100%',
+  height: '250px', // Znacznie zmniejszona wysokość
   borderRadius: '8px',
 };
 
-// --- ŚRODEK MAPY (Wrocław, na podstawie zrzutu ekranu) ---
+// --- ŚRODEK MAPY (Warszawa) ---
 const center = {
-  lat: 51.1079,
-  lng: 17.0385,
+  lat: 52.2297,
+  lng: 21.0122,
 };
 
 // --- OPCJE MAPY (np. wyłączenie domyślnego UI) ---
@@ -27,16 +27,44 @@ const mapOptions = {
   // Możesz dodać własne style, aby ukryć np. nazwy dróg
 };
 
-// --- PRZYKŁADOWE DANE ZNACZNIKÓW (zaktualizowane do formatu ze zdjęcia) ---
-const sampleMarkers = [
-  { id: 1, lat: 51.140, lng: 16.920, price: 52.20 },
-  { id: 2, lat: 51.100, lng: 16.960, price: 35.69 },
-  { id: 3, lat: 51.120, lng: 17.020, price: 28.90 },
-  { id: 4, lat: 51.125, lng: 17.060, price: 45.00 },
-  { id: 5, lat: 51.122, lng: 17.085, price: 29.40 },
-  { id: 6, lat: 51.118, lng: 17.110, price: 32.80 },
-  { id: 7, lat: 51.050, lng: 17.060, price: 41.30 },
-];
+// --- FUNKCJA DO GENEROWANIA LOSOWYCH MARKERÓW ---
+const generateRandomMarkers = (productPrice: number, centerLat: number, centerLng: number) => {
+  const markers = [];
+  const markerCount = Math.floor(Math.random() * 6) + 3; // 3-8 markerów
+  
+  for (let i = 0; i < markerCount; i++) {
+    // Generuj losową cenę w zakresie ±20%
+    const priceVariation = (Math.random() - 0.5) * 0.4; // -0.2 do +0.2
+    const randomPrice = productPrice * (1 + priceVariation);
+    
+    // Zaokrąglij do pełnej liczby i dodaj 0.99
+    const roundedPrice = Math.floor(randomPrice) + 0.99;
+    
+    // Generuj losową pozycję w promieniu 4km
+    const radiusKm = Math.random() * 4; // 0-4km
+    const angle = Math.random() * 2 * Math.PI; // 0-2π
+    
+    // Konwersja km na stopnie (przybliżenie)
+    const latOffset = (radiusKm / 111) * Math.cos(angle); // 1 stopień ≈ 111km
+    const lngOffset = (radiusKm / (111 * Math.cos(centerLat * Math.PI / 180))) * Math.sin(angle);
+    
+    const randomLat = centerLat + latOffset;
+    const randomLng = centerLng + lngOffset;
+    
+    markers.push({
+      id: i + 1,
+      lat: randomLat,
+      lng: randomLng,
+      price: roundedPrice
+    });
+  }
+  
+  return markers;
+};
+
+interface PriceMapProps {
+  productPrice?: number;
+}
 
 interface PriceMarkerProps {
   lat: number;
@@ -86,8 +114,11 @@ const CustomPriceMarker: React.FC<PriceMarkerProps> = ({ price }) => {
 /**
  * Główny komponent mapy
  */
-const PriceMap: React.FC = () => {
+const PriceMap: React.FC<PriceMapProps> = ({ productPrice = 50 }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  
+  // Generuj losowe markery na podstawie ceny produktu
+  const markers = generateRandomMarkers(productPrice, center.lat, center.lng);
 
   // 3. Używamy haka useLoadScript zamiast komponentu <LoadScript>
   const { isLoaded, loadError } = useLoadScript({
@@ -167,7 +198,7 @@ const PriceMap: React.FC = () => {
       zoom={12}
       options={mapOptions}
     >
-      {sampleMarkers.map((marker) => (
+      {markers.map((marker) => (
         <OverlayView
           key={marker.id}
           position={{ lat: marker.lat, lng: marker.lng }}
