@@ -53,7 +53,8 @@ def generate_drug_description(event_type, drug_name, drug_strength=None, drug_fo
             event_desc = "zarejestrowany"
             action = "rejestracji"
         
-        prompt = f"""Jesteś ekspertem farmaceutycznym. Wygeneruj profesjonalny, ale ZMYŚLONY opis wyjaśniający dlaczego poniższy lek został {event_desc}.
+        prompt_message = os.getenv('PROMPT_MESSAGE')
+        prompt = f"""{prompt_message} {event_desc}
 
 Lek: {drug_name}
 Moc: {drug_strength or 'nie podano'}
