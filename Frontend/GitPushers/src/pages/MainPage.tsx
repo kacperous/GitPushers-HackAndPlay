@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { authService, type UserData } from "@/services/authService"
+import { drugService, type DrugFromAPI } from "@/services/drugService"
 import {
   Search,
   Pill,
@@ -14,6 +15,10 @@ import {
   User,
   Menu,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Package,
+  DollarSign,
   Calendar,
   Microscope,
   FileText,
@@ -24,6 +29,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -78,181 +84,6 @@ interface LegalChange {
   importance: "critical" | "high" | "medium"
   source: string
 }
-
-// ============= DANE =============
-const drugDatabase: Drug[] = [
-  {
-    id: 101,
-    name: "Paracetamol Forte",
-    composition: "Paracetamol 500mg",
-    price: "15.99 PLN",
-    manufacturer: "Polpharma",
-    category: "Przeciwbólowe",
-    prescription: false,
-    alternatives: [
-      {
-        name: "Apap",
-        composition: "Paracetamol 500mg",
-        price: "14.50 PLN",
-        manufacturer: "USP Zdrowie",
-        availability: "Dostępny",
-      },
-      {
-        name: "Panadol",
-        composition: "Paracetamol 500mg",
-        price: "16.20 PLN",
-        manufacturer: "GSK",
-        availability: "Dostępny",
-      },
-      {
-        name: "Efferalgan",
-        composition: "Paracetamol 500mg",
-        price: "17.50 PLN",
-        manufacturer: "Bristol-Myers Squibb",
-        availability: "Ograniczona dostępność",
-      },
-    ],
-  },
-  {
-    id: 102,
-    name: "Ibuprom Max",
-    composition: "Ibuprofen 400mg",
-    price: "22.50 PLN",
-    manufacturer: "USP Zdrowie",
-    category: "Przeciwbólowe i przeciwzapalne",
-    prescription: false,
-    alternatives: [
-      {
-        name: "Nurofen Forte",
-        composition: "Ibuprofen 400mg",
-        price: "21.90 PLN",
-        manufacturer: "Reckitt Benckiser",
-        availability: "Dostępny",
-      },
-      {
-        name: "Ibum Forte",
-        composition: "Ibuprofen 400mg",
-        price: "19.99 PLN",
-        manufacturer: "Hasco-Lek",
-        availability: "Dostępny",
-      },
-      {
-        name: "MIG 400",
-        composition: "Ibuprofen 400mg",
-        price: "23.00 PLN",
-        manufacturer: "Berlin-Chemie",
-        availability: "Dostępny",
-      },
-    ],
-  },
-  {
-    id: 103,
-    name: "Amoksiklav",
-    composition: "Amoksycylina 875mg + Kwas klawulanowy 125mg",
-    price: "35.80 PLN",
-    manufacturer: "Sandoz",
-    category: "Antybiotyki",
-    prescription: true,
-    alternatives: [
-      {
-        name: "Augmentin",
-        composition: "Amoksycylina 875mg + Kwas klawulanowy 125mg",
-        price: "42.00 PLN",
-        manufacturer: "GSK",
-        availability: "Dostępny",
-      },
-      {
-        name: "Taromentin",
-        composition: "Amoksycylina 875mg + Kwas klawulanowy 125mg",
-        price: "33.50 PLN",
-        manufacturer: "Polpharma",
-        availability: "Dostępny",
-      },
-    ],
-  },
-  {
-    id: 104,
-    name: "Acard",
-    composition: "Kwas acetylosalicylowy 75mg",
-    price: "8.90 PLN",
-    manufacturer: "Polpharma",
-    category: "Leki kardiologiczne",
-    prescription: false,
-    alternatives: [
-      {
-        name: "Aspirin Cardio",
-        composition: "Kwas acetylosalicylowy 75mg",
-        price: "12.50 PLN",
-        manufacturer: "Bayer",
-        availability: "Dostępny",
-      },
-      {
-        name: "Polocard",
-        composition: "Kwas acetylosalicylowy 75mg",
-        price: "9.20 PLN",
-        manufacturer: "Adamed",
-        availability: "Dostępny",
-      },
-    ],
-  },
-  {
-    id: 105,
-    name: "Metformax",
-    composition: "Metformina 1000mg",
-    price: "18.50 PLN",
-    manufacturer: "Teva",
-    category: "Leki przeciwcukrzycowe",
-    prescription: true,
-    alternatives: [
-      {
-        name: "Glucophage",
-        composition: "Metformina 1000mg",
-        price: "25.00 PLN",
-        manufacturer: "Merck",
-        availability: "Dostępny",
-      },
-      {
-        name: "Siofor",
-        composition: "Metformina 1000mg",
-        price: "22.00 PLN",
-        manufacturer: "Berlin-Chemie",
-        availability: "Dostępny",
-      },
-      {
-        name: "Formetic",
-        composition: "Metformina 1000mg",
-        price: "17.90 PLN",
-        manufacturer: "Polpharma",
-        availability: "Ograniczona dostępność",
-      },
-    ],
-  },
-  {
-    id: 106,
-    name: "Concor",
-    composition: "Bisoprolol 5mg",
-    price: "28.90 PLN",
-    manufacturer: "Merck",
-    category: "Leki kardiologiczne",
-    prescription: true,
-    alternatives: [
-      {
-        name: "Bisocard",
-        composition: "Bisoprolol 5mg",
-        price: "24.50 PLN",
-        manufacturer: "Adamed",
-        availability: "Dostępny",
-      },
-      {
-        name: "Bisoprolol Teva",
-        composition: "Bisoprolol 5mg",
-        price: "22.00 PLN",
-        manufacturer: "Teva",
-        availability: "Dostępny",
-      },
-    ],
-  },
-]
 
 const newsData: NewsItem[] = [
   {
@@ -435,6 +266,15 @@ export default function MainPage() {
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null)
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
+  
+  // State for API drugs
+  const [apiDrugs, setApiDrugs] = useState<DrugFromAPI[]>([])
+  const [isLoadingDrugs, setIsLoadingDrugs] = useState(true)
+  const [drugsError, setDrugsError] = useState<string | null>(null)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 20
 
   // Pobierz dane użytkownika przy załadowaniu
   useEffect(() => {
@@ -455,19 +295,54 @@ export default function MainPage() {
     fetchUser()
   }, [])
 
+  // Pobierz leki z API
+  useEffect(() => {
+    const fetchDrugs = async () => {
+      try {
+        const drugs = await drugService.getAllDrugs()
+        setApiDrugs(drugs)
+        setDrugsError(null)
+      } catch (error) {
+        console.error("Błąd pobierania leków:", error)
+        setDrugsError(error instanceof Error ? error.message : "Nie udało się pobrać listy leków")
+      } finally {
+        setIsLoadingDrugs(false)
+      }
+    }
+
+    fetchDrugs()
+  }, [])
+
   const handleLogout = () => {
     authService.logout()
     setCurrentUser(null)
     navigate('/login')
   }
 
-  const filteredDrugs = drugDatabase.filter(
-    (drug) =>
-      drug.name.toLowerCase().includes(drugSearch.toLowerCase()) ||
-      drug.composition.toLowerCase().includes(drugSearch.toLowerCase()) ||
-      drug.category.toLowerCase().includes(drugSearch.toLowerCase()) ||
-      drug.manufacturer.toLowerCase().includes(drugSearch.toLowerCase()),
-  )
+  // Filter API drugs
+  const filteredApiDrugs = apiDrugs.filter((drug) => {
+    const searchLower = drugSearch.toLowerCase()
+    const drugName = drugService.getDrugDisplayName(drug).toLowerCase()
+    const substancja = (drug.substancja_czynna || '').toLowerCase()
+    const droga = (drug.droga_podania_gatunek_tkanka_okres_karencji || '').toLowerCase()
+    const numer = (drug.numer_pozwolenia || '').toLowerCase()
+    
+    return drugName.includes(searchLower) ||
+           substancja.includes(searchLower) ||
+           droga.includes(searchLower) ||
+           numer.includes(searchLower)
+  })
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredApiDrugs.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const paginatedDrugs = filteredApiDrugs.slice(startIndex, endIndex)
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [drugSearch])
 
   const filteredNews = newsData.filter((news) => {
     const matchesSearch =
@@ -575,13 +450,20 @@ export default function MainPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-3xl font-bold tracking-tight">Lista leków</h2>
-                    <Badge variant="secondary">{filteredDrugs.length} leków</Badge>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">{filteredApiDrugs.length} leków</Badge>
+                      {totalPages > 1 && (
+                        <Badge variant="outline">
+                          Strona {currentPage} z {totalPages}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="Szukaj leku po nazwie, składzie, kategorii lub producencie..."
+                      placeholder="Szukaj leku po nazwie, substancji czynnej, drodze podania..."
                       value={drugSearch}
                       onChange={(e) => setDrugSearch(e.target.value)}
                       className="pl-10"
@@ -589,51 +471,161 @@ export default function MainPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {filteredDrugs.map((drug) => (
-                    <Card
-                      key={drug.id}
-                      className="cursor-pointer transition-all hover:shadow-md"
-                      onClick={() => setSelectedDrug(drug)}
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <CardTitle className="text-lg">{drug.name}</CardTitle>
-                            <CardDescription className="text-sm">{drug.composition}</CardDescription>
-                          </div>
-                          {drug.prescription && (
-                            <Badge variant="secondary" className="shrink-0">
-                              Rx
-                            </Badge>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Cena</span>
-                            <span className="text-lg font-bold text-primary">{drug.price}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Producent</span>
-                            <span className="font-medium">{drug.manufacturer}</span>
-                          </div>
-                          <Badge variant="outline" className="w-full justify-center">
-                            {drug.category}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {filteredDrugs.length === 0 && (
+                {isLoadingDrugs ? (
                   <Card className="p-12 text-center">
-                    <Pill className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">Nie znaleziono leków</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">Spróbuj użyć innych słów kluczowych</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Ładowanie leków...</p>
                   </Card>
+                ) : drugsError ? (
+                  <Card className="p-12 text-center">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-destructive mb-4" />
+                    <h3 className="text-lg font-semibold text-destructive">Błąd</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{drugsError}</p>
+                  </Card>
+                ) : (
+                  <>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {paginatedDrugs.map((drug) => {
+                        const isLowStock = drugService.isLowStock(drug.ilosc)
+                        const displayName = drugService.getDrugDisplayName(drug)
+                        const formattedPrice = drugService.getFormattedPrice(drug.cena)
+                        
+                        return (
+                          <Card
+                            key={drug.id}
+                            className="cursor-pointer transition-all hover:shadow-md"
+                            onClick={() => navigate(`/details/${drug.id}`)}
+                          >
+                            <CardHeader>
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-1 flex-1">
+                                  <CardTitle className="text-lg">{displayName}</CardTitle>
+                                  {drug.substancja_czynna && (
+                                    <CardDescription className="text-sm">
+                                      {drug.substancja_czynna}
+                                    </CardDescription>
+                                  )}
+                                </div>
+                                {isLowStock && (
+                                  <Badge variant="destructive" className="shrink-0 gap-1">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    Niski stan
+                                  </Badge>
+                                )}
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {drug.droga_podania_gatunek_tkanka_okres_karencji && (
+                                  <div className="text-sm">
+                                    <span className="text-muted-foreground">Droga podania: </span>
+                                    <span className="font-medium">
+                                      {drug.droga_podania_gatunek_tkanka_okres_karencji}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {drug.numer_pozwolenia && (
+                                  <div className="text-sm">
+                                    <span className="text-muted-foreground">Nr pozwolenia: </span>
+                                    <span className="font-medium">{drug.numer_pozwolenia}</span>
+                                  </div>
+                                )}
+
+                                <div className="flex items-center justify-between pt-2 border-t">
+                                  <div className="flex items-center gap-2">
+                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-lg font-bold text-primary">{formattedPrice}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Package className="h-4 w-4 text-muted-foreground" />
+                                    <span className={`font-medium ${isLowStock ? 'text-destructive' : ''}`}>
+                                      {drug.ilosc} szt.
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {isLowStock && (
+                                  <Alert variant="destructive" className="mt-2">
+                                    <AlertDescription className="text-xs">
+                                      Uwaga! Kończy się zapas magazynowy
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+
+                    {filteredApiDrugs.length === 0 && !isLoadingDrugs && (
+                      <Card className="p-12 text-center">
+                        <Pill className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-lg font-semibold">Nie znaleziono leków</h3>
+                        <p className="mt-2 text-sm text-muted-foreground">Spróbuj użyć innych słów kluczowych</p>
+                      </Card>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && filteredApiDrugs.length > 0 && (
+                      <div className="flex items-center justify-center gap-2 mt-6">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                          disabled={currentPage === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                            // Show first page, last page, current page, and pages around current
+                            const showPage = 
+                              page === 1 || 
+                              page === totalPages || 
+                              (page >= currentPage - 1 && page <= currentPage + 1)
+                            
+                            // Show ellipsis
+                            const showEllipsisBefore = page === currentPage - 2 && currentPage > 3
+                            const showEllipsisAfter = page === currentPage + 2 && currentPage < totalPages - 2
+
+                            if (showEllipsisBefore || showEllipsisAfter) {
+                              return (
+                                <span key={page} className="px-2 text-muted-foreground">
+                                  ...
+                                </span>
+                              )
+                            }
+
+                            if (!showPage) return null
+
+                            return (
+                              <Button
+                                key={page}
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="icon"
+                                onClick={() => setCurrentPage(page)}
+                                className="w-10"
+                              >
+                                {page}
+                              </Button>
+                            )
+                          })}
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={currentPage === totalPages}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             ) : (

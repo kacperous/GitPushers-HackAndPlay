@@ -6,6 +6,7 @@ import MapPage from './pages/MapPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainPage from './pages/MainPage';
 import HomePage from './pages/HomePage';
+import DrugDetailsPage from './pages/DrugDetailsPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/details/:id" element={<DrugDetailsPage />} />
         
         <Route 
           path="/profile" 
