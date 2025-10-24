@@ -103,6 +103,23 @@ export default function LoginPage({ onLogin, onBackToHome, onGoToRegister }: Log
     )
   }
 
+  const BackToRegisterButton: React.FC<{ onGoToRegister?: () => void }> = ({ onGoToRegister }) => {
+    const navigate = useNavigate()
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault()
+          if (onGoToRegister) onGoToRegister()
+          else navigate('/register')
+        }}
+        className="text-primary hover:underline block w-full"
+      >
+        Nie masz konta? Zarejestruj się
+      </button>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
@@ -216,19 +233,7 @@ export default function LoginPage({ onLogin, onBackToHome, onGoToRegister }: Log
 
               {/* Links */}
               <div className="space-y-2 text-center text-sm">
-                <a href="#" className="text-primary hover:underline block">
-                  Zapomniałeś hasła?
-                </a>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    if (onGoToRegister) onGoToRegister()
-                  }}
-                  className="text-primary hover:underline block w-full"
-                >
-                  Nie masz konta? Zarejestruj się
-                </button>
+                <BackToRegisterButton onGoToRegister={onGoToRegister} />
               </div>
 
               {/* Back to Home Button - always visible; if parent provides onBackToHome it will be used, otherwise navigate to '/' */}
