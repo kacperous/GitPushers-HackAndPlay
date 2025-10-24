@@ -27,11 +27,13 @@ def generate_drug_description(event_type, drug_name, drug_strength=None, drug_fo
         str: Generated description or error message
     """
     try:
-        api_key = os.getenv('AI_KEY')
-        base_url = os.getenv('AI_BASE_URL', 'https://9921ae86-3cf5-4e5c-8151-e1d274ceb539.ifr.fr-par.scaleway.com/v1')
+        from django.conf import settings
+        
+        api_key = settings.SCALEWAY_API_KEY
+        base_url = "https://9921ae86-3cf5-4e5c-8151-e1d274ceb539.ifr.fr-par.scaleway.com/v1"
         
         if not api_key:
-            logger.warning("AI_KEY not found in environment variables")
+            logger.warning("SCALEWAY_API_KEY not found in settings")
             return None
         
         # Scaleway AI API setup

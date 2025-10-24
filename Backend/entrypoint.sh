@@ -7,11 +7,6 @@ while ! pg_isready -h db_hackathon -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB; do
 done
 echo "PostgreSQL started"
 
-# Wait for Redis to be ready
-echo "Waiting for Redis..."
-sleep 5
-echo "Redis started"
-
 # Run migrations
 echo "Running migrations..."
 python manage.py makemigrations
