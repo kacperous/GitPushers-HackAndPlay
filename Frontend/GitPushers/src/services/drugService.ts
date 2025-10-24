@@ -38,6 +38,18 @@ class DrugService {
     }
   }
 
+  async getAlternativesBySubstance(substanceName: string): Promise<DrugFromAPI[]> {
+    try {
+      const response: AxiosResponse<DrugFromAPI[]> = await apiClient.post(`/pharmac/search/substance/`, {
+        substance: substanceName
+      });
+      return response.data;
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      throw new Error(errorMessage);
+    }
+  }
+
   // Helper function to safely get drug name
   getDrugDisplayName(drug: DrugFromAPI): string {
     return drug.nazwa_powszechnie_stosowana || 
