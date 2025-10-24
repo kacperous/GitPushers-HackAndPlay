@@ -7,21 +7,31 @@ while ! pg_isready -h db_hackathon -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB; do
 done
 echo "PostgreSQL started"
 
-# Run migrations
+# Run migrations first
 echo "Running migrations..."
 python manage.py makemigrations
 python manage.py migrate
 
-# Create superuser if it doesn't exist
+# Wait a bit for migrations to complete
+sleep 2
+
+# Create superuser if it doesn't exist (only after migrations)
 echo "Creating superuser..."
 python manage.py shell -c "
 from django.contrib.auth import get_user_model;
 User = get_user_model();
-if not User.objects.filter(email='${DJANGO_SUPERUSER_EMAIL}').exists():
-    User.objects.create_superuser(email='${DJANGO_SUPERUSER_EMAIL}', first_name='Admin', last_name='User', password='${DJANGO_SUPERUSER_PASSWORD}');
-    print('✅ Superuser created successfully!');
-else:
-    print('✅ Superuser already exists');
+try:
+    if not User.objects.filter(email='${DJANGO_SUPERUSER_EMAIL}').exists():
+        User.objects.create_superuser(
+            email='${DJANGO_SUPERUSER_EMAIL}', 
+            username='${DJANGO_SUPERUSER_USERNAME}',
+            password='${DJANGO_SUPERUSER_PASSWORD}'
+        );
+        print('✅ Superuser created successfully!');
+    else:
+        print('✅ Superuser already exists');
+except Exception as e:
+    print(f'❌ Error creating superuser: {e}');
 "
 
 # Execute the passed command or default
