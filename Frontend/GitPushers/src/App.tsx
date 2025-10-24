@@ -1,5 +1,9 @@
 import { useState } from 'react';
-// import SplitText from "./SplitText"; // Możesz usunąć tę linię, jeśli już jej nie potrzebujesz
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import UserProfile from './pages/UserProfile';
+import PriceMap from './components/PriceMap';
+import { authService } from './services/authService';
 
 // Importy komponentów Material UI
 import AppBar from '@mui/material/AppBar';
@@ -10,13 +14,86 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid'; // Do responsywnego układu
+import Grid from '@mui/material/Grid';
 
 function App() {
   const [count, setCount] = useState(0);
+  // Dodanie 'map' do możliwych stron
+  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'register' | 'profile' | 'map'>('home'); // <--- ZMODYFIKOWANE
+  const [isLoggedIn, setIsLoggedIn] = useState(authService.isAuthenticated());
 
+  const handleLogin = (formData: { email: string; password: string }) => {
+    console.log('Login successful:', formData);
+    setIsLoggedIn(true);
+    setCurrentPage('home');
+  };
+
+  const handleRegister = (formData: { first_name: string; last_name: string; email: string; password: string; password2: string; account_type?: 'doctor' | 'pharmacy' }) => {
+    console.log('Registration successful:', formData);
+    setIsLoggedIn(true);
+    setCurrentPage('home');
+  };
+
+  const handleBackToHome = () => {
+    setCurrentPage('home');
+  };
+
+  const handleGoToLogin = () => {
+    setCurrentPage('login');
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsLoggedIn(false);
+    setCurrentPage('home');
+  };
+
+  const handleGoToProfile = () => {
+    setCurrentPage('profile');
+  };
+
+  const handleGoToRegister = () => {
+    setCurrentPage('register');
+  };
+
+  const handleGoToMap = () => {
+    setCurrentPage('map');
+  };
+
+  if (currentPage === 'login') {
+    return <LoginPage onLogin={handleLogin} onBackToHome={handleBackToHome} onGoToRegister={handleGoToRegister} />;
+  }
+
+  if (currentPage === 'register') {
+    return <RegisterPage onRegister={handleRegister} onBackToLogin={handleGoToLogin} onBackToHome={handleBackToHome} />;
+  }
+
+  if (currentPage === 'profile') {
+    return <UserProfile onBackToHome={handleBackToHome} />;
+  }
+
+  if (currentPage === 'map') {
+    return (
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Mapa Cen
+            </Typography>
+            <Button color="inherit" onClick={handleBackToHome}>
+              Powrót do strony głównej
+            </Button>
+          </Toolbar>
+        </AppBar>
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center' }}>
+          <PriceMap />
+        </Container>
+      </Box>
+    );
+  }
+
+  // --- Strona Główna (currentPage === 'home') ---
   return (
-    // Box to uniwersalny komponent do układu, często używany jako wrapper
     <Box sx={{ flexGrow: 1 }}>
       {/* 1. AppBar (Nagłówek) */}
       <AppBar position="static">
@@ -24,15 +101,33 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Moja Aplikacja MUI
           </Typography>
-          <Button color="inherit" onClick={() => alert('Witaj!')}>Logowanie</Button>
+          
+          {/* DODANY PRZYCISK MAPY */}
+          <Button color="inherit" onClick={handleGoToMap} sx={{ mr: 1 }}>
+            Mapa
+          </Button>
+
+          <Button color="inherit" onClick={isLoggedIn ? handleLogout : () => setCurrentPage('login')} sx={{ mr: 1 }}>
+            {isLoggedIn ? 'Wyloguj się' : 'Logowanie'}
+          </Button>
+          {!isLoggedIn && (
+            <Button color="inherit" onClick={() => setCurrentPage('register')} sx={{ mr: 1 }}>
+              Rejestracja
+            </Button>
+          )}
+          {isLoggedIn && (
+            <Button color="inherit" onClick={handleGoToProfile}>
+              Profil
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
 
       {/* 2. Główna zawartość w kontenerze */}
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}> {/* mt: margin-top, mb: margin-bottom */}
-        <Grid container spacing={3}> {/* Siatka do responsywnego układu */}
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Grid container spacing={3}>
           {/* Karta 1 */}
-          <Grid item xs={12} md={6}> {/* Na małych ekranach 12 kolumn, na średnich 6 */}
+          <Grid item xs={12} md={6}>
             <Card variant="outlined" sx={{ minHeight: 200 }}>
               <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
