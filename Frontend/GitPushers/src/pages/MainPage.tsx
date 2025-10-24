@@ -249,7 +249,18 @@ export default function MainPage() {
     const fetchDrugs = async () => {
       try {
         const drugs = await drugService.getAllDrugs()
-        setApiDrugs(drugs)
+        
+        // Zmień ceny od razu po otrzymaniu danych z API
+        const processedDrugs = drugs.map(drug => {
+          if (drug.cena) {
+            const originalPrice = parseFloat(drug.cena)
+            const roundedPrice = Math.floor(originalPrice) + 0.99
+            drug.cena = roundedPrice.toString()
+          }
+          return drug
+        })
+        
+        setApiDrugs(processedDrugs)
         setDrugsError(null)
       } catch (error) {
         console.error("Błąd pobierania leków:", error)

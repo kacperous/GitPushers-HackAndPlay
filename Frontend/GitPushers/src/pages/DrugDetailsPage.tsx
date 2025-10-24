@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { drugService, type DrugFromAPI } from "@/services/drugService"
+import PriceMap from "@/components/PriceMap"
 
 export default function DrugDetailsPage() {
   const { id } = useParams<{ id: string }>()
@@ -26,6 +27,14 @@ export default function DrugDetailsPage() {
 
       try {
         const drugData = await drugService.getDrugById(parseInt(id))
+        
+        // Zmień cenę od razu po otrzymaniu danych z API
+        if (drugData.cena) {
+          const originalPrice = parseFloat(drugData.cena)
+          const roundedPrice = Math.floor(originalPrice) + 0.99
+          drugData.cena = roundedPrice.toString()
+        }
+        
         setDrug(drugData)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Nie udało się pobrać danych leku")
@@ -127,51 +136,196 @@ export default function DrugDetailsPage() {
                 </Alert>
               )}
 
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Price and Stock */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 border rounded-lg">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Cena</p>
-                      <p className="text-xl font-semibold">{formattedPrice}</p>
-                    </div>
-                  </div>
+              {/* Sprawdź ile jest kafelków */}
+              {(() => {
+                const tileCount = [
+                  drug.droga_podania_gatunek_tkanka_okres_karencji,
+                  drug.numer_pozwolenia,
+                  drug.cena,
+                  drug.ilosc
+                ].filter(Boolean).length;
 
-                  <div className="flex items-center gap-3 p-4 border rounded-lg">
-                    <Package className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Stan magazynowy</p>
-                      <p className="text-xl font-semibold">
-                        {drug.ilosc} {drug.ilosc === 1 ? 'sztuka' : 'sztuk'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                if (tileCount === 3) {
+                  // Jeśli dokładnie 3 kafelki - mapa na dole, kafelki na górze w jednej linii
+                  return (
+                    <>
+                      {/* Kafelki w jednej linii */}
+                      <div className="mb-6">
+                        <div className="grid gap-4 grid-cols-3">
+                          {drug.droga_podania_gatunek_tkanka_okres_karencji && (
+                            <div className="flex items-start gap-3 p-4 border rounded-lg">
+                              <FileText className="h-5 w-5 text-primary mt-0.5" />
+                              <div>
+                                <p className="text-sm text-muted-foreground">Droga podania</p>
+                                <p className="font-medium">{drug.droga_podania_gatunek_tkanka_okres_karencji}</p>
+                              </div>
+                            </div>
+                          )}
 
-                {/* Additional Info */}
-                <div className="space-y-4">
-                  {drug.droga_podania_gatunek_tkanka_okres_karencji && (
-                    <div className="flex items-start gap-3 p-4 border rounded-lg">
-                      <FileText className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Droga podania</p>
-                        <p className="font-medium">{drug.droga_podania_gatunek_tkanka_okres_karencji}</p>
+                          {drug.numer_pozwolenia && (
+                            <div className="flex items-start gap-3 p-4 border rounded-lg">
+                              <FileText className="h-5 w-5 text-primary mt-0.5" />
+                              <div>
+                                <p className="text-sm text-muted-foreground">Numer pozwolenia</p>
+                                <p className="font-medium">{drug.numer_pozwolenia}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-3 p-4 border rounded-lg">
+                            <DollarSign className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Cena</p>
+                              <p className="text-xl font-semibold">{formattedPrice}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 p-4 border rounded-lg">
+                            <Package className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Stan magazynowy</p>
+                              <p className="text-xl font-semibold">
+                                {drug.ilosc} {drug.ilosc === 1 ? 'sztuka' : 'sztuk'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  {drug.numer_pozwolenia && (
-                    <div className="flex items-start gap-3 p-4 border rounded-lg">
-                      <FileText className="h-5 w-5 text-primary mt-0.5" />
+                      {/* Mapa na dole */}
                       <div>
-                        <p className="text-sm text-muted-foreground">Numer pozwolenia</p>
-                        <p className="font-medium">{drug.numer_pozwolenia}</p>
+                        <div className="p-4 border rounded-lg">
+                          <div className="w-full">
+                            <PriceMap productPrice={parseFloat(drug.cena || '0')} />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                    </>
+                  );
+                } else if (tileCount > 3) {
+                  // Jeśli więcej niż 3 kafelki - mapa na dole, kafelki na górze w jednej linii
+                  return (
+                    <>
+                      {/* Kafelki w jednej linii */}
+                      <div className="mb-6">
+                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                          {drug.droga_podania_gatunek_tkanka_okres_karencji && (
+                            <div className="flex items-start gap-3 p-4 border rounded-lg">
+                              <FileText className="h-5 w-5 text-primary mt-0.5" />
+                              <div>
+                                <p className="text-sm text-muted-foreground">Droga podania</p>
+                                <p className="font-medium">{drug.droga_podania_gatunek_tkanka_okres_karencji}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {drug.numer_pozwolenia && (
+                            <div className="flex items-start gap-3 p-4 border rounded-lg">
+                              <FileText className="h-5 w-5 text-primary mt-0.5" />
+                              <div>
+                                <p className="text-sm text-muted-foreground">Numer pozwolenia</p>
+                                <p className="font-medium">{drug.numer_pozwolenia}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-3 p-4 border rounded-lg">
+                            <DollarSign className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Cena</p>
+                              <p className="text-xl font-semibold">{formattedPrice}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 p-4 border rounded-lg">
+                            <Package className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Stan magazynowy</p>
+                              <p className="text-xl font-semibold">
+                                {drug.ilosc} {drug.ilosc === 1 ? 'sztuka' : 'sztuk'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mapa na dole */}
+                      <div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="w-full">
+                            <PriceMap productPrice={parseFloat(drug.cena || '0')} />
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                } else {
+                  // Jeśli 3 lub mniej kafelków - mapa na górze, kafelki na dole
+                  return (
+                    <>
+                      {/* Price Map */}
+                      <div className="mb-6">
+                        <div className="p-4 border rounded-lg">
+                          <h3 className="text-lg font-semibold mb-3">Mapa cen w okolicy</h3>
+                          <div className="w-full">
+                            <PriceMap productPrice={parseFloat(drug.cena || '0')} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 3 kafelki bez mapy */}
+                      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                        {/* Additional Info */}
+                        <div className="space-y-4">
+                          {drug.droga_podania_gatunek_tkanka_okres_karencji && (
+                            <div className="flex items-start gap-3 p-4 border rounded-lg">
+                              <FileText className="h-5 w-5 text-primary mt-0.5" />
+                              <div>
+                                <p className="text-sm text-muted-foreground">Droga podania</p>
+                                <p className="font-medium">{drug.droga_podania_gatunek_tkanka_okres_karencji}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {drug.numer_pozwolenia && (
+                            <div className="flex items-start gap-3 p-4 border rounded-lg">
+                              <FileText className="h-5 w-5 text-primary mt-0.5" />
+                              <div>
+                                <p className="text-sm text-muted-foreground">Numer pozwolenia</p>
+                                <p className="font-medium">{drug.numer_pozwolenia}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Price */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3 p-4 border rounded-lg">
+                            <DollarSign className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Cena</p>
+                              <p className="text-xl font-semibold">{formattedPrice}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Stock */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3 p-4 border rounded-lg">
+                            <Package className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Stan magazynowy</p>
+                              <p className="text-xl font-semibold">
+                                {drug.ilosc} {drug.ilosc === 1 ? 'sztuka' : 'sztuk'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                }
+              })()}
             </CardContent>
           </Card>
 
