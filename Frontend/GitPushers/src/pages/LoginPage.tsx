@@ -2,26 +2,18 @@ import React, { useState } from 'react';
 import { authService, type LoginData } from '../services/authService';
 import {
   Box,
-  Card,
-  CardContent,
   TextField,
   Button,
   Typography,
   Container,
   Alert,
-  InputAdornment,
-  IconButton,
   Divider,
   Link,
   Paper,
 } from '@mui/material';
-import {
-  Visibility,
-  VisibilityOff,
-  Email,
-  Lock,
-  Login as LoginIcon,
-} from '@mui/icons-material';
+import { Email, Lock, Login as LoginIcon } from '@mui/icons-material';
+
+import PasswordInput from '../components/PasswordInput';
 
 interface LoginFormData extends LoginData {}
 
@@ -36,28 +28,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
     email: '',
     password: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
+  
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
 
   const validateForm = (): boolean => {
+    // ... (logika walidacji bez zmian)
     const newErrors: Partial<LoginFormData> = {};
-
-    // Email validation
     if (!formData.email) {
       newErrors.email = 'Email jest wymagany';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email jest nieprawidłowy';
     }
-
-    // Password validation
     if (!formData.password) {
       newErrors.password = 'Hasło jest wymagane';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Hasło musi mieć co najmniej 6 znaków';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -70,7 +58,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
       [field]: event.target.value,
     }));
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -81,22 +68,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
+    // ... (logika wysyłania bez zmian)
     event.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
     setLoginError('');
-
     try {
-      // Make API call to login
       const response = await authService.login(formData);
-      
       console.log('Login successful:', response);
-      
-      // For demo purposes, simulate successful login
       if (onLogin) {
         onLogin(formData);
       }
@@ -107,9 +86,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
     }
   };
 
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  // USUNIĘTE: Ta funkcja została przeniesiona do PasswordInput
+  // const handleTogglePasswordVisibility = () => {
+  //   setShowPassword(!showPassword);
+  // };
 
   return (
     <Container component="main" maxWidth="sm">
@@ -133,17 +113,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
             borderRadius: 2,
           }}
         >
-          {/* Header */}
+          {/* Header (bez zmian) */}
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Typography component="h1" variant="h4" gutterBottom>
-            Zaloguj się
+              Zaloguj się
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Wprowadź swoje dane, aby uzyskać dostęp do konta
             </Typography>
           </Box>
 
-          {/* Login Form */}
+          {/* Login Form (bez zmian) */}
           <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mt: 1 }}>
             {loginError && (
               <Alert severity="error" sx={{ mb: 2 }}>
@@ -151,6 +131,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
               </Alert>
             )}
 
+            {/* Pole Email (bez zmian) */}
             <TextField
               margin="normal"
               required
@@ -167,13 +148,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
               placeholder="Wprowadź swój email"
             />
 
-            <TextField
+            <PasswordInput
               margin="normal"
               required
               fullWidth
               name="password"
               label="Hasło"
-              type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="current-password"
               value={formData.password}
@@ -181,21 +161,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
               error={!!errors.password}
               helperText={errors.password}
               placeholder="Wprowadź swoje hasło"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleTogglePasswordVisibility}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
             />
-
+            
+            {/* Przycisk i reszta formularza (bez zmian) */}
             <Button
               type="submit"
               fullWidth
@@ -212,7 +180,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBackToHome, onGoToRegi
               </Typography>
             </Divider>
 
-            {/* Additional Options */}
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Link href="#" variant="body2" sx={{ display: 'block', mb: 1 }}>
                 Zapomniałeś hasła?

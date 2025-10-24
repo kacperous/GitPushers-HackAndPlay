@@ -26,7 +26,7 @@ function App() {
     setCurrentPage('home');
   };
 
-  const handleRegister = (formData: { first_name: string; last_name: string; email: string; password: string; password2: string; account_type: 'doctor' | 'pharmacy' }) => {
+  const handleRegister = (formData: { first_name: string; last_name: string; email: string; password: string; password2: string; account_type?: 'doctor' | 'pharmacy' }) => {
     console.log('Registration successful:', formData);
     setIsLoggedIn(true);
     setCurrentPage('home');

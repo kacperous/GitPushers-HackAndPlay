@@ -12,7 +12,7 @@ export interface RegisterData {
   password2: string;
   first_name: string;
   last_name: string;
-  account_type: 'doctor' | 'pharmacy';
+  account_type?: 'doctor' | 'pharmacy'; // Opcjonalne, domyślnie 'pharmacy'
 }
 
 export interface UserData {
@@ -65,12 +65,18 @@ class AuthService {
   }
 
   async register(registerData: RegisterData): Promise<{ token: string; user: UserData }> {
+    // Automatycznie ustaw account_type na 'pharmacy' jeśli nie jest podane
+    const dataToSend = {
+      ...registerData,
+      account_type: registerData.account_type || 'pharmacy'
+    };
+
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(registerData),
+      body: JSON.stringify(dataToSend),
     });
 
     if (!response.ok) {
