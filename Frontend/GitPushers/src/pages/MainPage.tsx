@@ -455,15 +455,11 @@ export default function MainPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 bg-primary">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <Pill className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="text-xl font-bold text-primary">DrugTracer</h1>
-                <p className="text-xs text-muted-foreground">Medical Hub</p>
-              </div>
+              <img 
+                src="/Pharma.svg" 
+                alt="DrugTracer Logo" 
+                className="h-25 w-25"
+              />
             </div>
 
             <div className="hidden md:flex items-center gap-2">
