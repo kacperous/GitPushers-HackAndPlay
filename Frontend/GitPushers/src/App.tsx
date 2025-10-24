@@ -2,6 +2,7 @@ import { useState } from 'react';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import UserProfile from './pages/UserProfile';
+import PriceMap from './components/PriceMap';
 import { authService } from './services/authService';
 
 // Importy komponentów Material UI
@@ -17,7 +18,8 @@ import Grid from '@mui/material/Grid';
 
 function App() {
   const [count, setCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'register' | 'profile'>('home');
+  // Dodanie 'map' do możliwych stron
+  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'register' | 'profile' | 'map'>('home'); // <--- ZMODYFIKOWANE
   const [isLoggedIn, setIsLoggedIn] = useState(authService.isAuthenticated());
 
   const handleLogin = (formData: { email: string; password: string }) => {
@@ -54,6 +56,10 @@ function App() {
     setCurrentPage('register');
   };
 
+  const handleGoToMap = () => {
+    setCurrentPage('map');
+  };
+
   if (currentPage === 'login') {
     return <LoginPage onLogin={handleLogin} onBackToHome={handleBackToHome} onGoToRegister={handleGoToRegister} />;
   }
@@ -66,8 +72,28 @@ function App() {
     return <UserProfile onBackToHome={handleBackToHome} />;
   }
 
+  if (currentPage === 'map') {
+    return (
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Mapa Cen
+            </Typography>
+            <Button color="inherit" onClick={handleBackToHome}>
+              Powrót do strony głównej
+            </Button>
+          </Toolbar>
+        </AppBar>
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center' }}>
+          <PriceMap />
+        </Container>
+      </Box>
+    );
+  }
+
+  // --- Strona Główna (currentPage === 'home') ---
   return (
-    // Box to uniwersalny komponent do układu, często używany jako wrapper
     <Box sx={{ flexGrow: 1 }}>
       {/* 1. AppBar (Nagłówek) */}
       <AppBar position="static">
@@ -75,6 +101,12 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Moja Aplikacja MUI
           </Typography>
+          
+          {/* DODANY PRZYCISK MAPY */}
+          <Button color="inherit" onClick={handleGoToMap} sx={{ mr: 1 }}>
+            Mapa
+          </Button>
+
           <Button color="inherit" onClick={isLoggedIn ? handleLogout : () => setCurrentPage('login')} sx={{ mr: 1 }}>
             {isLoggedIn ? 'Wyloguj się' : 'Logowanie'}
           </Button>
@@ -92,10 +124,10 @@ function App() {
       </AppBar>
 
       {/* 2. Główna zawartość w kontenerze */}
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}> {/* mt: margin-top, mb: margin-bottom */}
-        <Grid container spacing={3}> {/* Siatka do responsywnego układu */}
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Grid container spacing={3}>
           {/* Karta 1 */}
-          <Grid item xs={12} md={6}> {/* Na małych ekranach 12 kolumn, na średnich 6 */}
+          <Grid item xs={12} md={6}>
             <Card variant="outlined" sx={{ minHeight: 200 }}>
               <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
