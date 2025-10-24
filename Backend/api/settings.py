@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'security',
     'drf_spectacular',
+    'news',
 ]
 
 MIDDLEWARE = [
@@ -179,3 +180,5 @@ SIMPLE_JWT = {
     
     'JTI_CLAIM': 'jti',
 }
+
+SCALEWAY_API_KEY = os.getenv('SCALEWAY_API_KEY', 'a2019bca-2084-4823-a7b4-9944b044ac07')
