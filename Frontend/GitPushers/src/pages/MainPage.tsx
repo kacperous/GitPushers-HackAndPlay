@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import {
   Search,
   Pill,
@@ -428,7 +429,6 @@ export default function MainPage() {
   const [newsFilter, setNewsFilter] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null)
-  const [isLoginOpen, setIsLoginOpen] = useState(false)
 
   const filteredDrugs = drugDatabase.filter(
     (drug) =>
@@ -505,10 +505,12 @@ export default function MainPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" onClick={() => setIsLoginOpen(true)} className="gap-2">
-              <LogIn className="h-4 w-4" />
-              <span className="hidden sm:inline">Zaloguj się</span>
-            </Button>
+            <Link to="/login">
+              <Button variant="outline" className="gap-2">
+                <LogIn className="h-4 w-4" />
+                <span className="hidden sm:inline">Zaloguj się</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -899,35 +901,6 @@ export default function MainPage() {
               </div>
             </>
           )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Zaloguj się</DialogTitle>
-            <DialogDescription>
-              Wprowadź swoje dane logowania, aby uzyskać dostęp do pełnej funkcjonalności
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input id="email" type="email" placeholder="twoj@email.pl" />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Hasło
-              </label>
-              <Input id="password" type="password" placeholder="••••••••" />
-            </div>
-            <Button className="w-full">Zaloguj się</Button>
-            <div className="text-center text-sm text-muted-foreground">
-              Nie masz konta? <button className="text-primary hover:underline">Zarejestruj się</button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
