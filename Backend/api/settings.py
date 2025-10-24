@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'security',
     'scraper',
     'drf_spectacular',
+    'news',
     'django_celery_beat',
     'django_celery_results',
 ]
@@ -183,6 +184,7 @@ SIMPLE_JWT = {
     'JTI_CLAIM': 'jti',
 }
 
+SCALEWAY_API_KEY = os.getenv('SCALEWAY_API_KEY', 'a2019bca-2084-4823-a7b4-9944b044ac07')
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
 CELERY_RESULT_BACKEND = 'django-db'

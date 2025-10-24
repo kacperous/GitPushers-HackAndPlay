@@ -5,10 +5,10 @@ djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.1
 drf-spectacular==0.27.1
 requests==2.31.0
+openai>=1.50.0
 beautifulsoup4==4.12.2
 lxml==4.9.3
 celery==5.3.4
 redis==5.0.1
 django-celery-beat==2.5.0
 django-celery-results==2.5.1
-openai==1.57.4

@@ -20,6 +20,7 @@ services:
     volumes:
       - ./media:/app/media
       - ./security/migrations:/app/security/migrations
+      - ./news/migrations:/app/news/migrations
     depends_on:
       db_hackathon:
         condition: service_healthy
