@@ -2,15 +2,18 @@
 
 import Link from "next/link"
 import { PharmaRadarLogo } from "./pharma-radar-logo"
+import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 export function Footer() {
+  const { ref, isVisible } = useScrollAnimation(0.1)
+
   return (
-    <footer className="border-t bg-background">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+    <footer ref={ref as React.RefObject<HTMLElement>} className="border-t bg-background">
+      <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <PharmaRadarLogo className="h-16 w-auto text-primary" />
+              <PharmaRadarLogo className="h-8 w-8 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">Profesjonalne rozwiązania dla farmaceutów.</p>
           </div>

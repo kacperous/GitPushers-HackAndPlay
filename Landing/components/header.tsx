@@ -7,10 +7,10 @@ import { PharmaRadarLogo } from "./pharma-radar-logo"
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in fade-in slide-in-from-top duration-700">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
-          <PharmaRadarLogo className="h-12 w-auto text-primary" />
+          <PharmaRadarLogo className="h-25 w-25 text-primary" />
         </div>
 
         <div className="flex items-center gap-2">
