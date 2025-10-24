@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   TextField,
@@ -22,11 +23,8 @@ import {
 } from '@mui/icons-material';
 import { authService, type UserData, type UpdateUserData } from '../services/authService';
 
-interface UserProfileProps {
-  onBackToHome?: () => void;
-}
-
-const UserProfile: React.FC<UserProfileProps> = ({ onBackToHome }) => {
+const UserProfile: React.FC = () => {
+  const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,9 +104,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onBackToHome }) => {
 
   const handleLogout = () => {
     authService.logout();
-    if (onBackToHome) {
-      onBackToHome();
-    }
+    navigate('/login');
   };
 
   if (isLoading) {
@@ -318,14 +314,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onBackToHome }) => {
             >
               Wyloguj się
             </Button>
-            {onBackToHome && (
-              <Button
-                variant="outlined"
-                onClick={onBackToHome}
-              >
-                Powrót do strony głównej
-              </Button>
-            )}
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/')}
+            >
+              Powrót do strony głównej
+            </Button>
           </Box>
         </Paper>
       </Box>

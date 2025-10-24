@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService, type RegisterData } from '../services/authService';
 import {
   Box,
@@ -23,13 +24,8 @@ import PasswordInput from '../components/PasswordInput';
 
 interface RegisterFormData extends RegisterData {}
 
-interface RegisterPageProps {
-  onRegister?: (formData: RegisterFormData) => void;
-  onBackToLogin?: () => void;
-  onBackToHome?: () => void;
-}
-
-const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, onBackToHome }) => {
+const RegisterPage: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<RegisterFormData>({
     first_name: '',
     last_name: '',
@@ -99,7 +95,6 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
-    // ... (Logika bez zmian)
     event.preventDefault();
     if (!validateForm()) {
       return;
@@ -109,9 +104,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
     try {
       const response = await authService.register(formData);
       console.log('Registration successful:', response);
-      if (onRegister) {
-        onRegister(formData);
-      }
+      navigate('/');
     } catch (error) {
       setRegisterError(error instanceof Error ? error.message : 'Wystąpił błąd podczas rejestracji. Spróbuj ponownie.');
     } finally {
@@ -302,21 +295,19 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
                 sx={{ display: 'block', mb: 1 }}
                 onClick={(e) => {
                   e.preventDefault();
-                  if (onBackToLogin) onBackToLogin();
+                  navigate('/login');
                 }}
               >
                 Masz już konto? Zaloguj się
               </Link>
               
-              {onBackToHome && (
-                <Button
-                  variant="outlined"
-                  onClick={onBackToHome}
-                  sx={{ mt: 1 }}
-                >
-                  Powrót do strony głównej
-                </Button>
-              )}
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/')}
+                sx={{ mt: 1 }}
+              >
+                Powrót do strony głównej
+              </Button>
             </Box>
           </Box>
         </Paper>
