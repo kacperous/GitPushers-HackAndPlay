@@ -22,5 +22,5 @@ class DrugEventListSerializer(serializers.ModelSerializer):
         model = DrugEvent
         fields = [
             'id', 'event_type', 'source', 'publication_date', 'decision_number',
-            'drug_name', 'drug_strength', 'marketing_authorisation_holder', 'description'
+            'drug_name', 'drug_strength', 'drug_form', 'marketing_authorisation_holder', 'description'
         ]

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { authService, type UserData } from "@/services/authService"
 import { drugService, type DrugFromAPI } from "@/services/drugService"
+import { drugEventService, type DrugEvent } from "@/services/drugEventService"
 import {
   Search,
   Pill,
@@ -64,15 +65,6 @@ interface NewsItem {
   date: string
   icon: React.ReactNode
   color: string
-}
-
-interface DrugUpdate {
-  id: number
-  type: "NOWY LEK" | "WYCOFANIE" | "ZMIANA SKŁADU" | "ZMIANA CENY"
-  drugName: string
-  description: string
-  date: string
-  priority: "high" | "medium" | "low"
 }
 
 interface LegalChange {
@@ -148,56 +140,7 @@ const newsData: NewsItem[] = [
   },
 ]
 
-const drugUpdates: DrugUpdate[] = [
-  {
-    id: 1,
-    type: "NOWY LEK",
-    drugName: "CardioProtect XL",
-    description: "Nowy lek na nadciśnienie zatw. przez FDA",
-    date: "24.10.2025",
-    priority: "high",
-  },
-  {
-    id: 2,
-    type: "WYCOFANIE",
-    drugName: "RinoStop (45A-B)",
-    description: "Pilne wycofanie z powodu zanieczyszczeń",
-    date: "23.10.2025",
-    priority: "high",
-  },
-  {
-    id: 3,
-    type: "ZMIANA SKŁADU",
-    drugName: "Analgetin",
-    description: "Zamiana laktozy na celulozę",
-    date: "22.10.2025",
-    priority: "medium",
-  },
-  {
-    id: 4,
-    type: "ZMIANA CENY",
-    drugName: "Ibuprom Max",
-    description: "Obniżka ceny o 15% (refundacja NFZ)",
-    date: "21.10.2025",
-    priority: "low",
-  },
-  {
-    id: 5,
-    type: "NOWY LEK",
-    drugName: "DiabControl Pro",
-    description: "Insulina nowej generacji",
-    date: "19.10.2025",
-    priority: "medium",
-  },
-  {
-    id: 6,
-    type: "ZMIANA CENY",
-    drugName: "Amoksiklav",
-    description: "Wzrost ceny o 8%",
-    date: "18.10.2025",
-    priority: "low",
-  },
-]
+// drugUpdates will be loaded from API
 
 const legalChanges: LegalChange[] = [
   {
@@ -272,6 +215,16 @@ export default function MainPage() {
   const [isLoadingDrugs, setIsLoadingDrugs] = useState(true)
   const [drugsError, setDrugsError] = useState<string | null>(null)
   
+  // State for API drug events
+  const [drugUpdates, setDrugUpdates] = useState<DrugEvent[]>([])
+  const [isLoadingDrugUpdates, setIsLoadingDrugUpdates] = useState(true)
+  
+  // State for expanded drug updates
+  const [expandedUpdates, setExpandedUpdates] = useState<Set<number>>(new Set())
+  
+  // State for loading alternatives
+  const [loadingAlternatives, setLoadingAlternatives] = useState<number | null>(null)
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 20
@@ -313,10 +266,49 @@ export default function MainPage() {
     fetchDrugs()
   }, [])
 
+  // Pobierz aktualizacje leków z API
+  useEffect(() => {
+    const fetchDrugUpdates = async () => {
+      if (!authService.isAuthenticated()) {
+        setIsLoadingDrugUpdates(false)
+        return
+      }
+
+      try {
+        const events = await drugEventService.getRecentEvents(10)
+        setDrugUpdates(events)
+      } catch (error) {
+        console.error("Błąd pobierania aktualizacji leków:", error)
+        // Nie ustawiamy błędu - po prostu zostawiamy pustą listę
+      } finally {
+        setIsLoadingDrugUpdates(false)
+      }
+    }
+
+    fetchDrugUpdates()
+  }, [currentUser])
+
   const handleLogout = () => {
     authService.logout()
     setCurrentUser(null)
     navigate('/login')
+  }
+
+  const toggleUpdateExpansion = (updateId: number) => {
+    setExpandedUpdates(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(updateId)) {
+        newSet.delete(updateId)
+      } else {
+        newSet.add(updateId)
+      }
+      return newSet
+    })
+  }
+
+  const truncateText = (text: string, maxLength: number = 100) => {
+    if (text.length <= maxLength) return text
+    return text.substring(0, maxLength) + "..."
   }
 
   // Filter API drugs
@@ -352,7 +344,7 @@ export default function MainPage() {
     return matchesSearch && matchesCategory
   })
 
-  const highPriorityUpdates = drugUpdates.filter((u) => u.priority === "high").length
+  const highPriorityUpdates = drugUpdates.filter((u) => drugEventService.getEventPriority(u.event_type) === "high").length
   const criticalLegalChanges = legalChanges.filter((c) => c.importance === "critical").length
 
   return (
@@ -776,34 +768,101 @@ export default function MainPage() {
                   <CardContent className="p-0">
                     <ScrollArea className="h-[calc(100vh-200px)]">
                       <div className="space-y-1">
-                        {drugUpdates.map((update) => (
-                          <div
-                            key={update.id}
-                            className={`border-b p-4 last:border-0 ${update.priority === "high" ? "bg-destructive/5" : ""}`}
-                          >
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <Badge
-                                  variant={
-                                    update.type === "NOWY LEK"
-                                      ? "default"
-                                      : update.type === "WYCOFANIE"
-                                        ? "destructive"
-                                        : update.type === "ZMIANA SKŁADU"
-                                          ? "secondary"
-                                          : "outline"
-                                  }
-                                  className="text-xs"
-                                >
-                                  {update.type}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">{update.date}</span>
-                              </div>
-                              <h4 className="font-semibold">{update.drugName}</h4>
-                              <p className="text-sm text-muted-foreground">{update.description}</p>
-                            </div>
+                        {isLoadingDrugUpdates ? (
+                          <div className="p-8 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                            <p className="text-xs text-muted-foreground">Ładowanie...</p>
                           </div>
-                        ))}
+                        ) : drugUpdates.length === 0 ? (
+                          <div className="p-8 text-center">
+                            <p className="text-sm text-muted-foreground">Brak ostatnich aktualizacji</p>
+                          </div>
+                        ) : (
+                          drugUpdates.map((update) => {
+                            const priority = drugEventService.getEventPriority(update.event_type)
+                            const eventLabel = drugEventService.getEventTypeLabel(update.event_type)
+                            const formattedDate = drugEventService.formatDate(update.publication_date)
+                            const isExpanded = expandedUpdates.has(update.id)
+                            const description = update.description || `${update.source} - ${update.marketing_authorisation_holder}`
+                            const shouldTruncate = description.length > 100
+                            const isWithdrawn = update.event_type === 'WITHDRAWAL'
+                            
+                            return (
+                              <div
+                                key={update.id}
+                                className={`border-b p-4 last:border-0 ${priority === "high" ? "bg-destructive/5" : ""} ${shouldTruncate ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}`}
+                                onClick={() => shouldTruncate && toggleUpdateExpansion(update.id)}
+                              >
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <Badge
+                                      variant={
+                                        update.event_type === "REGISTRATION"
+                                          ? "default"
+                                          : update.event_type === "WITHDRAWAL"
+                                            ? "destructive"
+                                            : "secondary"
+                                      }
+                                      className="text-xs"
+                                    >
+                                      {eventLabel}
+                                    </Badge>
+                                    {isWithdrawn ? (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-xs h-6 px-2"
+                                        disabled={loadingAlternatives === update.id}
+                                        onClick={async (e) => {
+                                          e.stopPropagation()
+                                          setLoadingAlternatives(update.id)
+                                          try {
+                                            console.log('Searching for alternatives for:', update.drug_name)
+                                            // Try to find the drug by name
+                                            const drugs = await drugService.getAlternativesBySubstance(update.drug_name)
+                                            console.log('Found drugs:', drugs)
+                                            if (drugs.length > 0) {
+                                              // Navigate to the first alternative found with scroll parameter
+                                              console.log('Navigating to drug:', drugs[0].id)
+                                              navigate(`/details/${drugs[0].id}?scrollTo=alternatives`)
+                                            } else {
+                                              console.log('No alternatives found')
+                                              alert('Nie znaleziono alternatyw dla tego leku')
+                                            }
+                                          } catch (error) {
+                                            console.error('Error finding alternatives:', error)
+                                            alert('Błąd podczas wyszukiwania alternatyw: ' + (error instanceof Error ? error.message : 'Nieznany błąd'))
+                                          } finally {
+                                            setLoadingAlternatives(null)
+                                          }
+                                        }}
+                                      >
+                                        {loadingAlternatives === update.id ? '...' : 'Alternatywy'}
+                                      </Button>
+                                    ) : priority === "high" && (
+                                      <Badge variant="destructive" className="text-xs">
+                                        Pilne
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <h4 className="font-semibold text-sm leading-tight">{update.drug_name}</h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    {isExpanded || !shouldTruncate ? description : truncateText(description, 100)}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-muted-foreground">{formattedDate}</span>
+                                  </div>
+                                  {update.batch_number && (
+                                    <p className="text-xs text-muted-foreground italic">
+                                      Seria: {update.batch_number}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })
+                        )}
                       </div>
                     </ScrollArea>
                   </CardContent>
