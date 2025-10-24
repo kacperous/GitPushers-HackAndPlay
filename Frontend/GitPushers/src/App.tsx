@@ -4,6 +4,7 @@ import RegisterPage from './pages/RegisterPage';
 import UserProfile from './pages/UserProfile';
 import PriceMap from './components/PriceMap';
 import { authService } from './services/authService';
+import { Button as ShadcnButton } from '@/components/ui/button';
 
 // Importy komponentów Material UI
 import AppBar from '@mui/material/AppBar';
@@ -166,6 +167,28 @@ function App() {
                 >
                   Akcja 2
                 </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Karta 3 - Demonstracja shadcn/ui */}
+          <Grid item xs={12}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h5" component="div" gutterBottom>
+                  shadcn/ui - Nowy System Stylistyczny
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Poniżej przykład komponentu Button z shadcn/ui - nowoczesnej biblioteki komponentów z Tailwind CSS.
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <ShadcnButton>Default Button</ShadcnButton>
+                  <ShadcnButton variant="secondary">Secondary</ShadcnButton>
+                  <ShadcnButton variant="destructive">Destructive</ShadcnButton>
+                  <ShadcnButton variant="outline">Outline</ShadcnButton>
+                  <ShadcnButton variant="ghost">Ghost</ShadcnButton>
+                  <ShadcnButton variant="link">Link</ShadcnButton>
+                </Box>
               </CardContent>
             </Card>
           </Grid>
