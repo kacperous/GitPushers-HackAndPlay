@@ -7,6 +7,7 @@ import random
 import logging
 
 from .models import DrugEvent
+from .ai_generator import generate_drug_description
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,17 @@ def scrape_medicinal_products():
                     
                     # Create new DrugEvent
                     try:
+                        # Generate AI description
+                        ai_description = generate_drug_description(
+                            event_type=event_type,
+                            drug_name=final_drug_name,
+                            drug_strength=power,
+                            drug_form=pharmaceutical_form,
+                            marketing_holder=subject_name,
+                            publication_date=random_date,
+                            decision_number=decision_number
+                        )
+                        
                         drug_event = DrugEvent.objects.create(
                             event_type=event_type,
                             source=DrugEvent.DataSource.URPL,  # URPL for medicinal products
@@ -104,10 +116,12 @@ def scrape_medicinal_products():
                             marketing_authorisation_holder=subject_name,
                             batch_number=None,  # Not available in this data
                             expiry_date=parse_expiration_date(expiration_date),
+                            description=ai_description,
                         )
                         
                         new_records += 1
-                        print(f"✅ Created: {final_drug_name} - {event_type} - {random_date}")
+                        desc_status = "✨ with AI" if ai_description else "📝 no AI"
+                        print(f"✅ Created: {final_drug_name} - {event_type} - {random_date} {desc_status}")
                         
                     except Exception as e:
                         error_msg = f"Error creating record for {final_drug_name}: {str(e)}"

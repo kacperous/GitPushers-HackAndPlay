@@ -90,7 +90,7 @@ class ScrapeDataView(APIView):
     )
     def post(self, request):
         try:
-            from .scraper_script import scrape_rdg_data
+            from .gif_scraper import scrape_rdg_data
             
             # Run the scraper
             result = scrape_rdg_data()

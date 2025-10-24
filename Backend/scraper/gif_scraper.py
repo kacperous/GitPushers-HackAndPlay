@@ -7,6 +7,7 @@ from django.db import transaction
 import logging
 
 from .models import DrugEvent
+from .ai_generator import generate_drug_description
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +116,17 @@ def scrape_rdg_data():
                         
                         # Create new DrugEvent
                         try:
+                            # Generate AI description
+                            ai_description = generate_drug_description(
+                                event_type=event_type,
+                                drug_name=drug_name,
+                                drug_strength=strength,
+                                drug_form=None,
+                                marketing_holder=responsible_entity,
+                                publication_date=decision_date,
+                                decision_number=decision_number
+                            )
+                            
                             drug_event = DrugEvent.objects.create(
                                 event_type=event_type,
                                 source=DrugEvent.DataSource.GIF,
@@ -125,10 +137,12 @@ def scrape_rdg_data():
                                 marketing_authorisation_holder=responsible_entity,
                                 batch_number=None,
                                 expiry_date=None,
+                                description=ai_description,
                             )
                             
                             new_records += 1
-                            print(f"✅ Created: {drug_name} - {decision_type_str}")
+                            desc_status = "✨ with AI" if ai_description else "📝 no AI"
+                            print(f"✅ Created: {drug_name} - {decision_type_str} {desc_status}")
                             
                         except Exception as e:
                             error_msg = f"Error creating record for {drug_name}: {str(e)}"

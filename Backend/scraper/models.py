@@ -76,6 +76,14 @@ class DrugEvent(models.Model):
         blank=True,
         help_text="Expiry date of the withdrawn/suspended batch"
     )
+    
+    # --- AI Generated Description ---
+    
+    description = models.TextField(
+        null=True,
+        blank=True,
+        help_text="AI-generated professional description explaining the reason for the event (withdrawal/suspension/registration)"
+    )
 
     # --- Tracking Fields (Best Practice) ---
     

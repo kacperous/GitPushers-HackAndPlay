@@ -10,7 +10,7 @@ class DrugEventSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'event_type', 'source', 'publication_date', 'decision_number',
             'drug_name', 'drug_strength', 'drug_form', 'marketing_authorisation_holder',
-            'batch_number', 'expiry_date', 'created_at', 'updated_at'
+            'batch_number', 'expiry_date', 'description', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -22,5 +22,5 @@ class DrugEventListSerializer(serializers.ModelSerializer):
         model = DrugEvent
         fields = [
             'id', 'event_type', 'source', 'publication_date', 'decision_number',
-            'drug_name', 'drug_strength', 'marketing_authorisation_holder'
+            'drug_name', 'drug_strength', 'marketing_authorisation_holder', 'description'
         ]
