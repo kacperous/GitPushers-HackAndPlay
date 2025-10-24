@@ -1,5 +1,5 @@
-// API service for authentication endpoints
-const API_BASE_URL = 'http://localhost:6543'; // Adjust this to your backend URL
+import apiClient, { handleApiError, setToken, removeToken, isAuthenticated as checkAuth, getToken } from '../api/api';
+import type { AxiosResponse } from 'axios';
 
 export interface LoginData {
   email: string;
@@ -12,7 +12,7 @@ export interface RegisterData {
   password2: string;
   first_name: string;
   last_name: string;
-  account_type?: 'doctor' | 'pharmacy'; // Opcjonalne, domyślnie 'pharmacy'
+  account_type?: 'doctor' | 'pharmacy';
 }
 
 export interface UserData {
@@ -31,108 +31,107 @@ export interface UpdateUserData {
   account_type?: 'doctor' | 'pharmacy';
 }
 
+interface LoginResponse {
+  access: string;
+  refresh: string;
+  user: UserData;
+}
+
+interface RegisterResponse {
+  user: UserData;
+  tokens: {
+    access: string;
+    refresh: string;
+  };
+  message: string;
+}
+
 class AuthService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
+  async login(loginData: LoginData): Promise<LoginResponse> {
+    try {
+      const response: AxiosResponse<LoginResponse> = await apiClient.post(
+        '/auth/login',
+        loginData
+      );
+
+      const { access, refresh } = response.data;
+
+      if (access) {
+        setToken(access);
+        localStorage.setItem('refreshToken', refresh);
+      }
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      throw new Error(errorMessage);
+    }
   }
 
-  async login(loginData: LoginData): Promise<{ token: string; user: UserData }> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(loginData),
-    });
+  async register(registerData: RegisterData): Promise<RegisterResponse> {
+    try {
+      const dataToSend = {
+        ...registerData,
+        account_type: registerData.account_type || 'pharmacy'
+      };
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Login failed');
+      const response: AxiosResponse<RegisterResponse> = await apiClient.post(
+        '/auth/register',
+        dataToSend
+      );
+
+      const { tokens } = response.data;
+
+      if (tokens.access) {
+        setToken(tokens.access);
+        localStorage.setItem('refreshToken', tokens.refresh);
+      }
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      throw new Error(errorMessage);
     }
-
-    const data = await response.json();
-    
-    // Store token in localStorage
-    if (data.token) {
-      localStorage.setItem('authToken', data.token);
-    }
-
-    return data;
-  }
-
-  async register(registerData: RegisterData): Promise<{ token: string; user: UserData }> {
-    // Automatycznie ustaw account_type na 'pharmacy' jeśli nie jest podane
-    const dataToSend = {
-      ...registerData,
-      account_type: registerData.account_type || 'pharmacy'
-    };
-
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToSend),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Registration failed');
-    }
-
-    const data = await response.json();
-    
-    // Store token in localStorage
-    if (data.token) {
-      localStorage.setItem('authToken', data.token);
-    }
-
-    return data;
   }
 
   async getCurrentUser(): Promise<UserData> {
-    const response = await fetch(`${API_BASE_URL}/auth/user/me`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to get user data');
+    try {
+      const response: AxiosResponse<UserData> = await apiClient.get('/auth/user/me');
+      return response.data;
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      throw new Error(errorMessage);
     }
-
-    return response.json();
   }
 
-  async updateUser(userData: UpdateUserData, method: 'PUT' | 'PATCH' = 'PATCH'): Promise<UserData> {
-    const response = await fetch(`${API_BASE_URL}/auth/user/update`, {
-      method: method,
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(userData),
-    });
+  async updateUser(
+    userData: UpdateUserData,
+    method: 'PUT' | 'PATCH' = 'PATCH'
+  ): Promise<UserData> {
+    try {
+      const response: AxiosResponse<UserData> = await apiClient.request({
+        method: method,
+        url: '/auth/user/update',
+        data: userData,
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update user');
+      return response.data;
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      throw new Error(errorMessage);
     }
-
-    return response.json();
   }
-
   logout(): void {
-    localStorage.removeItem('authToken');
+    removeToken();
+    localStorage.removeItem('refreshToken');
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('authToken');
+    return checkAuth();
   }
 
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    return getToken();
   }
 }
 
