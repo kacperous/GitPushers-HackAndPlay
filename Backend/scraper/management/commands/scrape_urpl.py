@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
-from scraper.scraper_script import scrape_rdg_data
+from scraper.urpl_scraper import scrape_medicinal_products
 from scraper.models import DrugEvent
 
 
 class Command(BaseCommand):
-    help = 'Run RDG scraper to fetch drug data and save to database'
+    help = 'Scrape URPL data (new drug registrations) from medicinal products API'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -16,12 +16,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self.stdout.write('🚀 Starting RDG Scraper...')
+        self.stdout.write('🚀 Starting URPL Scraper (New Registrations)...')
         self.stdout.write('=' * 50)
         
         try:
             # Run the scraper
-            result = scrape_rdg_data()
+            result = scrape_medicinal_products()
             
             # Show results
             self.stdout.write(
@@ -42,14 +42,16 @@ class Command(BaseCommand):
             
             # Show recent records count
             recent_count = DrugEvent.objects.filter(
+                source=DrugEvent.DataSource.URPL,
                 publication_date__gte=timezone.now().date() - timedelta(days=10)
             ).count()
-            self.stdout.write(f'   - Recent records (last 10 days): {recent_count}')
+            self.stdout.write(f'   - URPL records (last 10 days): {recent_count}')
             
             # Show sample records if requested
             if options['show_details'] and result['new_records'] > 0:
-                self.stdout.write('\n🔍 Recent drug events:')
+                self.stdout.write('\n🔍 Recent URPL medicinal products:')
                 recent_events = DrugEvent.objects.filter(
+                    source=DrugEvent.DataSource.URPL,
                     publication_date__gte=timezone.now().date() - timedelta(days=10)
                 ).order_by('-publication_date')[:5]
                 
@@ -58,10 +60,11 @@ class Command(BaseCommand):
                         f'   - {event.drug_name} ({event.event_type}) - {event.publication_date}'
                     )
             
-            self.stdout.write('\n🎉 Scraping completed!')
+            self.stdout.write('\n🎉 URPL Scraping completed!')
             
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f'❌ Scraping failed: {str(e)}')
             )
             raise
+

@@ -99,6 +99,11 @@ class DrugEvent(models.Model):
             models.UniqueConstraint(
                 fields=['decision_number', 'batch_number'], 
                 name='unique_decision_batch'
+            ),
+            # Prevents adding the same drug with the same event type
+            models.UniqueConstraint(
+                fields=['event_type', 'drug_name', 'source'],
+                name='unique_event_drug_source'
             )
         ]
 

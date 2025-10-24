@@ -50,7 +50,7 @@ def scrape_rdg_data():
         duplicates_skipped = 0
         
         # Calculate date 10 days ago
-        ten_days_ago = timezone.now().date() - timedelta(days=10)
+        ten_days_ago = timezone.now().date() - timedelta(days=20)
         
         with transaction.atomic():
             for row in rows:
