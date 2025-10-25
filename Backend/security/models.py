@@ -69,7 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
-        db_table = 'users'
+        db_table = 'security_user'
     
     def __str__(self):
         return self.email
