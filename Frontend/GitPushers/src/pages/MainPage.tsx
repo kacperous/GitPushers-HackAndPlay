@@ -165,8 +165,8 @@ export default function MainPage() {
   // State for expanded drug updates
   const [expandedUpdates, setExpandedUpdates] = useState<Set<number>>(new Set())
   
-  // State for loading alternatives
-  const [loadingAlternatives, setLoadingAlternatives] = useState<number | null>(null)
+  // State for loading alternatives (unused for now)
+  // const [loadingAlternatives, setLoadingAlternatives] = useState<number | null>(null)
   // State for API news
   const [apiNews, setApiNews] = useState<NewsFromAPI[]>([])
   const [isLoadingNews, setIsLoadingNews] = useState(true)

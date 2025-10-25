@@ -80,7 +80,7 @@ class NewsService {
   getCategory(news: NewsFromAPI): "Badania" | "Przepisy" | "Rynek" | "Technologia" {
     const title = this.getDisplayTitle(news).toLowerCase();
     const description = this.getDisplayDescription(news).toLowerCase();
-    const source = news.source.toLowerCase();
+    // const source = news.source.toLowerCase(); // Unused for now
     
     // Check for research-related keywords
     if (title.includes('badania') || title.includes('badanie') || 
