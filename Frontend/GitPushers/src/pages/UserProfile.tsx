@@ -8,7 +8,7 @@ import {
   Container,
   Alert,
   Paper,
-  Grid,
+  
   Card,
   CardContent,
   Divider,
@@ -199,89 +199,85 @@ const UserProfile: React.FC = () => {
           )}
 
           {/* User Information */}
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Dane osobowe
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  
-                  <TextField
-                    fullWidth
-                    label="Imię"
-                    value={isEditing ? editData.first_name || '' : userData.first_name}
-                    onChange={handleInputChange('first_name')}
-                    disabled={!isEditing}
-                    margin="normal"
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    label="Nazwisko"
-                    value={isEditing ? editData.last_name || '' : userData.last_name}
-                    onChange={handleInputChange('last_name')}
-                    disabled={!isEditing}
-                    margin="normal"
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    value={isEditing ? editData.email || '' : userData.email}
-                    onChange={handleInputChange('email')}
-                    disabled={!isEditing}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />,
-                    }}
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    label="Typ konta"
-                    value={isEditing ? editData.account_type || '' : userData.account_type}
-                    disabled
-                    margin="normal"
-                    helperText="Typ konta nie może być zmieniony"
-                  />
-                </CardContent>
-              </Card>
-            </Grid>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Dane osobowe
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                
+                <TextField
+                  fullWidth
+                  label="Imię"
+                  value={isEditing ? editData.first_name || '' : userData.first_name}
+                  onChange={handleInputChange('first_name')}
+                  disabled={!isEditing}
+                  margin="normal"
+                />
+                
+                <TextField
+                  fullWidth
+                  label="Nazwisko"
+                  value={isEditing ? editData.last_name || '' : userData.last_name}
+                  onChange={handleInputChange('last_name')}
+                  disabled={!isEditing}
+                  margin="normal"
+                />
+                
+                <TextField
+                  fullWidth
+                  label="Email"
+                  value={isEditing ? editData.email || '' : userData.email}
+                  onChange={handleInputChange('email')}
+                  disabled={!isEditing}
+                  margin="normal"
+                  InputProps={{
+                    startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />,
+                  }}
+                />
+                
+                <TextField
+                  fullWidth
+                  label="Typ konta"
+                  value={isEditing ? editData.account_type || '' : userData.account_type}
+                  disabled
+                  margin="normal"
+                  helperText="Typ konta nie może być zmieniony"
+                />
+              </CardContent>
+            </Card>
 
-            <Grid item xs={12} md={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Informacje o koncie
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Informacje o koncie
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    ID użytkownika:
                   </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      ID użytkownika:
-                    </Typography>
-                    <Typography variant="body1">
-                      {userData.id}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Typ konta:
-                    </Typography>
-                    <Typography variant="body1" sx={{ 
-                      color: userData.account_type === 'doctor' ? 'primary.main' : 'secondary.main',
-                      fontWeight: 'bold'
-                    }}>
-                      {userData.account_type === 'doctor' ? 'Lekarz' : 'Farmaceuta'}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                  <Typography variant="body1">
+                    {userData.id}
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Typ konta:
+                  </Typography>
+                  <Typography variant="body1" sx={{ 
+                    color: userData.account_type === 'doctor' ? 'primary.main' : 'secondary.main',
+                    fontWeight: 'bold'
+                  }}>
+                    {userData.account_type === 'doctor' ? 'Lekarz' : 'Farmaceuta'}
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
 
           {/* Action Buttons */}
           {isEditing && (

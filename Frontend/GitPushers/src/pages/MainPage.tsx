@@ -171,10 +171,69 @@ export default function MainPage() {
   const [apiNews, setApiNews] = useState<NewsFromAPI[]>([])
   const [isLoadingNews, setIsLoadingNews] = useState(true)
   const [newsError, setNewsError] = useState<string | null>(null)
+
+  // State for alternatives modal
+  const [showAlternativesModal, setShowAlternativesModal] = useState(false)
+  const [selectedDrugName, setSelectedDrugName] = useState<string>("")
+
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 20
+
+  // Mock alternatives data
+  const mockAlternatives = [
+    {
+      id: 1,
+      nazwa: "Apap Extra",
+      moc: "500 mg",
+      droga_podania: "doustna",
+      producent: "US Pharmacia",
+      cena: "12.50 PLN",
+      stan: 145,
+      isLowStock: false
+    },
+    {
+      id: 2,
+      nazwa: "Paracetamol",
+      moc: "500 mg",
+      droga_podania: "doustna",
+      producent: "Polpharma",
+      cena: "8.90 PLN",
+      stan: 234,
+      isLowStock: false
+    },
+    {
+      id: 3,
+      nazwa: "Panadol",
+      moc: "500 mg",
+      droga_podania: "doustna",
+      producent: "GSK",
+      cena: "15.20 PLN",
+      stan: 3,
+      isLowStock: true
+    },
+    {
+      id: 4,
+      nazwa: "Efferalgan",
+      moc: "500 mg",
+      droga_podania: "doustna",
+      producent: "Bristol-Myers Squibb",
+      cena: "18.70 PLN",
+      stan: 89,
+      isLowStock: false
+    },
+    {
+      id: 5,
+      nazwa: "Paracetamol Forte",
+      moc: "1000 mg",
+      droga_podania: "doustna",
+      producent: "Sandoz",
+      cena: "16.40 PLN",
+      stan: 2,
+      isLowStock: true
+    }
+  ]
 
   // Pobierz dane użytkownika przy załadowaniu
   useEffect(() => {
@@ -852,32 +911,13 @@ export default function MainPage() {
                                         variant="outline"
                                         size="sm"
                                         className="text-xs h-6 px-2"
-                                        disabled={loadingAlternatives === update.id}
-                                        onClick={async (e) => {
+                                        onClick={(e) => {
                                           e.stopPropagation()
-                                          setLoadingAlternatives(update.id)
-                                          try {
-                                            console.log('Searching for alternatives for:', update.drug_name)
-                                            // Try to find the drug by name
-                                            const drugs = await drugService.getAlternativesBySubstance(update.drug_name)
-                                            console.log('Found drugs:', drugs)
-                                            if (drugs.length > 0) {
-                                              // Navigate to the first alternative found with scroll parameter
-                                              console.log('Navigating to drug:', drugs[0].id)
-                                              navigate(`/details/${drugs[0].id}?scrollTo=alternatives`)
-                                            } else {
-                                              console.log('No alternatives found')
-                                              alert('Nie znaleziono alternatyw dla tego leku')
-                                            }
-                                          } catch (error) {
-                                            console.error('Error finding alternatives:', error)
-                                            alert('Błąd podczas wyszukiwania alternatyw: ' + (error instanceof Error ? error.message : 'Nieznany błąd'))
-                                          } finally {
-                                            setLoadingAlternatives(null)
-                                          }
+                                          setSelectedDrugName(update.drug_name)
+                                          setShowAlternativesModal(true)
                                         }}
                                       >
-                                        {loadingAlternatives === update.id ? '...' : 'Alternatywy'}
+                                        Alternatywy
                                       </Button>
                                     ) : priority === "high" && (
                                       <Badge variant="destructive" className="text-xs">
@@ -1146,6 +1186,63 @@ export default function MainPage() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Alternatives Modal */}
+      <Dialog open={showAlternativesModal} onOpenChange={setShowAlternativesModal} modal={true}>
+        <DialogContent className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 !w-[90vw] !h-[60vh] !max-w-[90vw] !max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pill className="h-5 w-5" />
+              Alternatywne leki dla: {selectedDrugName}
+            </DialogTitle>
+            <DialogDescription>
+              Poniżej znajdują się dostępne alternatywy dla wycofanego leku
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nazwa</TableHead>
+                  <TableHead>Moc</TableHead>
+                  <TableHead>Droga podania</TableHead>
+                  <TableHead>Producent</TableHead>
+                  <TableHead className="text-right">Cena</TableHead>
+                  <TableHead className="text-right">Stan</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {mockAlternatives.map((alt) => (
+                  <TableRow key={alt.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">{alt.nazwa}</TableCell>
+                    <TableCell>{alt.moc}</TableCell>
+                    <TableCell className="text-sm">{alt.droga_podania}</TableCell>
+                    <TableCell className="text-sm">{alt.producent}</TableCell>
+                    <TableCell className="text-right font-semibold text-primary">{alt.cena}</TableCell>
+                    <TableCell className="text-right">
+                      {alt.isLowStock ? (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          {alt.stan} szt.
+                        </Badge>
+                      ) : (
+                        <span className="font-medium">{alt.stan} szt.</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setShowAlternativesModal(false)}>
+              Zamknij
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
