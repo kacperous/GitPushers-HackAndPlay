@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies with production optimizations
-RUN npm ci --only=production --silent && \
+# Install dependencies
+RUN npm ci --silent && \
     npm cache clean --force
 
 # Copy source code
@@ -17,38 +17,37 @@ COPY . .
 # Build the application for production
 RUN npm run build
 
-# Production stage - use nginx for better performance
-FROM nginx:1.25-alpine
+# Production stage
+FROM node:20-alpine
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install serve globally
+RUN npm install -g serve
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Set working directory
+WORKDIR /app
 
 # Copy built application from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist ./dist
 
-# Create nginx user and set permissions
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-# Create nginx cache directory
-RUN mkdir -p /var/cache/nginx && \
-    chown -R nginx:nginx /var/cache/nginx
+# Change ownership of the app directory
+RUN chown -R nodejs:nodejs /app
 
 # Switch to non-root user
-USER nginx
+USER nodejs
 
 # Expose port
-EXPOSE 80
+EXPOSE 3000
 
 # Set environment variables
 ENV NODE_ENV=production
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application
+CMD ["serve", "-s", "dist", "-l", "3000"]
