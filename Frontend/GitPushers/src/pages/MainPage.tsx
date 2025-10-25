@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { authService, type UserData } from "@/services/authService"
 import { drugService, type DrugFromAPI } from "@/services/drugService"
 import { drugEventService, type DrugEvent } from "@/services/drugEventService"
+import { newsService, type NewsFromAPI } from "@/services/newsService"
 import {
   Search,
   Pill,
@@ -60,11 +61,15 @@ interface Drug {
 interface NewsItem {
   id: number
   title: string
-  excerpt: string
+  description: string
   category: "Badania" | "Przepisy" | "Rynek" | "Technologia"
   date: string
   icon: React.ReactNode
   color: string
+  url: string
+  source: string
+  image_url: string
+  is_translated: boolean
 }
 
 interface LegalChange {
@@ -77,68 +82,6 @@ interface LegalChange {
   source: string
 }
 
-const newsData: NewsItem[] = [
-  {
-    id: 1,
-    title: "Przełom w leczeniu Alzheimera - nowy lek pokazuje obiecujące rezultaty",
-    excerpt:
-      "Badania kliniczne fazy III wykazały 35% spowolnienie postępu choroby Alzheimera u pacjentów przyjmujących eksperymentalny lek...",
-    category: "Badania",
-    date: "24.10.2025",
-    icon: <Microscope className="h-5 w-5" />,
-    color: "#3b82f6",
-  },
-  {
-    id: 2,
-    title: "Nowe przepisy UE dotyczące antybiotyków wchodzą w życie",
-    excerpt:
-      "Od 1 listopada 2025 obowiązują nowe regulacje dotyczące przepisywania i dystrybucji antybiotyków w krajach Unii Europejskiej...",
-    category: "Przepisy",
-    date: "23.10.2025",
-    icon: <FileText className="h-5 w-5" />,
-    color: "#8b5cf6",
-  },
-  {
-    id: 3,
-    title: "Sztuczna inteligencja w diagnostyce medycznej - wzrost o 120%",
-    excerpt:
-      "Rynek rozwiązań AI w medycynie rośnie w zawrotnym tempie. Szacuje się, że do 2027 roku wartość rynku przekroczy 45 miliardów dolarów...",
-    category: "Technologia",
-    date: "23.10.2025",
-    icon: <Cpu className="h-5 w-5" />,
-    color: "#06b6d4",
-  },
-  {
-    id: 4,
-    title: "Spadek cen leków generycznych - analiza rynku Q3 2025",
-    excerpt:
-      "Średnie ceny leków generycznych spadły o 12% w trzecim kwartale 2025 roku. Eksperci przewidują dalszy trend spadkowy...",
-    category: "Rynek",
-    date: "22.10.2025",
-    icon: <TrendingUp className="h-5 w-5" />,
-    color: "#10b981",
-  },
-  {
-    id: 5,
-    title: "Terapia genowa w leczeniu raka - nowe wytyczne kliniczne",
-    excerpt:
-      "Ministerstwo Zdrowia opublikowało zaktualizowane wytyczne dotyczące stosowania terapii genowych w onkologii...",
-    category: "Przepisy",
-    date: "21.10.2025",
-    icon: <FileText className="h-5 w-5" />,
-    color: "#8b5cf6",
-  },
-  {
-    id: 6,
-    title: "Badania nad szczepionką mRNA przeciwko grypie",
-    excerpt:
-      "Producenci szczepionek mRNA rozpoczynają fazę III badań klinicznych nad uniwersalną szczepionką przeciwko grypie...",
-    category: "Badania",
-    date: "20.10.2025",
-    icon: <Microscope className="h-5 w-5" />,
-    color: "#3b82f6",
-  },
-]
 
 // drugUpdates will be loaded from API
 
@@ -207,6 +150,7 @@ export default function MainPage() {
   const [newsFilter, setNewsFilter] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null)
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   
@@ -215,16 +159,23 @@ export default function MainPage() {
   const [isLoadingDrugs, setIsLoadingDrugs] = useState(true)
   const [drugsError, setDrugsError] = useState<string | null>(null)
   
-  // State for API drug events
   const [drugUpdates, setDrugUpdates] = useState<DrugEvent[]>([])
   const [isLoadingDrugUpdates, setIsLoadingDrugUpdates] = useState(true)
   
   // State for expanded drug updates
   const [expandedUpdates, setExpandedUpdates] = useState<Set<number>>(new Set())
   
+  // State for loading alternatives
+  const [loadingAlternatives, setLoadingAlternatives] = useState<number | null>(null)
+  // State for API news
+  const [apiNews, setApiNews] = useState<NewsFromAPI[]>([])
+  const [isLoadingNews, setIsLoadingNews] = useState(true)
+  const [newsError, setNewsError] = useState<string | null>(null)
+
   // State for alternatives modal
   const [showAlternativesModal, setShowAlternativesModal] = useState(false)
   const [selectedDrugName, setSelectedDrugName] = useState<string>("")
+
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -308,7 +259,18 @@ export default function MainPage() {
     const fetchDrugs = async () => {
       try {
         const drugs = await drugService.getAllDrugs()
-        setApiDrugs(drugs)
+        
+        // Zmień ceny od razu po otrzymaniu danych z API
+        const processedDrugs = drugs.map(drug => {
+          if (drug.cena) {
+            const originalPrice = parseFloat(drug.cena)
+            const roundedPrice = Math.floor(originalPrice) + 0.99
+            drug.cena = roundedPrice.toString()
+          }
+          return drug
+        })
+        
+        setApiDrugs(processedDrugs)
         setDrugsError(null)
       } catch (error) {
         console.error("Błąd pobierania leków:", error)
@@ -342,6 +304,24 @@ export default function MainPage() {
 
     fetchDrugUpdates()
   }, [currentUser])
+  // Pobierz newsy z API
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const news = await newsService.getAllNews()
+        console.log('Fetched news:', news, 'Type:', typeof news, 'Is Array:', Array.isArray(news))
+        setApiNews(news)
+        setNewsError(null)
+      } catch (error) {
+        console.error("Błąd pobierania newsów:", error)
+        setNewsError(error instanceof Error ? error.message : "Nie udało się pobrać listy newsów")
+      } finally {
+        setIsLoadingNews(false)
+      }
+    }
+
+    fetchNews()
+  }, [])
 
   const handleLogout = () => {
     authService.logout()
@@ -391,10 +371,44 @@ export default function MainPage() {
     setCurrentPage(1)
   }, [drugSearch])
 
-  const filteredNews = newsData.filter((news) => {
+  // Convert API news to display format
+  console.log('apiNews before map:', apiNews, 'Type:', typeof apiNews, 'Is Array:', Array.isArray(apiNews))
+  
+  let displayNews: NewsItem[] = []
+  try {
+    if (Array.isArray(apiNews)) {
+      displayNews = apiNews.map((news) => {
+        const category = newsService.getCategory(news)
+        const categoryStyle = newsService.getCategoryStyle(category)
+        
+        return {
+          id: news.id,
+          title: newsService.getDisplayTitle(news),
+          description: newsService.getDisplayDescription(news),
+          category,
+          date: newsService.formatDate(news.published_at),
+          icon: categoryStyle.icon === "Microscope" ? <Microscope className="h-5 w-5" /> :
+                categoryStyle.icon === "FileText" ? <FileText className="h-5 w-5" /> :
+                categoryStyle.icon === "TrendingUp" ? <TrendingUp className="h-5 w-5" /> :
+                categoryStyle.icon === "Cpu" ? <Cpu className="h-5 w-5" /> :
+                <Newspaper className="h-5 w-5" />,
+          color: categoryStyle.color,
+          url: news.url,
+          source: news.source,
+          image_url: news.image_url,
+          is_translated: news.is_translated
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error mapping news:', error)
+    displayNews = []
+  }
+
+  const filteredNews = displayNews.filter((news) => {
     const matchesSearch =
       news.title.toLowerCase().includes(newsFilter.toLowerCase()) ||
-      news.excerpt.toLowerCase().includes(newsFilter.toLowerCase())
+      news.description.toLowerCase().includes(newsFilter.toLowerCase())
     const matchesCategory = categoryFilter === "all" || news.category === categoryFilter
     return matchesSearch && matchesCategory
   })
@@ -734,67 +748,97 @@ export default function MainPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  {filteredNews.map((news) => (
-                    <Card
-                      key={news.id}
-                      className="transition-all hover:shadow-lg hover:border-opacity-100"
-                      style={{
-                        borderColor: "hsl(var(--border))",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = news.color
-                        e.currentTarget.style.boxShadow = `0 4px 12px ${news.color}20`
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "hsl(var(--border))"
-                        e.currentTarget.style.boxShadow = ""
-                      }}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex gap-4">
-                          <Avatar
-                            className="h-12 w-12 shrink-0"
-                            style={{
-                              backgroundColor: `${news.color}15`,
-                              color: news.color,
-                            }}
-                          >
-                            <AvatarFallback
+                {isLoadingNews ? (
+                  <Card className="p-12 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Ładowanie newsów...</p>
+                  </Card>
+                ) : newsError ? (
+                  <Card className="p-12 text-center">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-destructive mb-4" />
+                    <h3 className="text-lg font-semibold text-destructive">Błąd</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{newsError}</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredNews.map((news) => (
+                      <Card
+                        key={news.id}
+                        className="transition-all hover:shadow-lg hover:border-opacity-100 cursor-pointer"
+                        style={{
+                          borderColor: "hsl(var(--border))",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = news.color
+                          e.currentTarget.style.boxShadow = `0 4px 12px ${news.color}20`
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "hsl(var(--border))"
+                          e.currentTarget.style.boxShadow = ""
+                        }}
+                        onClick={() => setSelectedNews(news)}
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex gap-4">
+                            {news.image_url ? (
+                              <img 
+                                src={news.image_url} 
+                                alt={news.title}
+                                className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                                }}
+                              />
+                            ) : null}
+                            <Avatar
+                              className={`h-12 w-12 shrink-0 ${news.image_url ? 'hidden' : ''}`}
                               style={{
                                 backgroundColor: `${news.color}15`,
                                 color: news.color,
                               }}
                             >
-                              {news.icon}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Badge
+                              <AvatarFallback
                                 style={{
                                   backgroundColor: `${news.color}15`,
                                   color: news.color,
-                                  borderColor: news.color,
                                 }}
                               >
-                                {news.category}
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">{news.date}</span>
-                            </div>
-                            <div className="space-y-2">
-                              <h3 className="text-xl font-semibold leading-tight">{news.title}</h3>
-                              <p className="text-muted-foreground">{news.excerpt}</p>
+                                {news.icon}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  style={{
+                                    backgroundColor: `${news.color}15`,
+                                    color: news.color,
+                                    borderColor: news.color,
+                                  }}
+                                >
+                                  {news.category}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">{news.date}</span>
+                                {news.is_translated && (
+                                  <Badge variant="outline" className="text-xs">
+                                    PL
+                                  </Badge>
+                                )}
+                                <span className="text-xs text-muted-foreground">• {news.source}</span>
+                              </div>
+                              <div className="space-y-2">
+                                <h3 className="text-xl font-semibold leading-tight">{news.title}</h3>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
 
-                {filteredNews.length === 0 && (
+                {!isLoadingNews && !newsError && filteredNews.length === 0 && (
                   <Card className="p-12 text-center">
                     <Newspaper className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-4 text-lg font-semibold">Nie znaleziono newsów</h3>
@@ -966,6 +1010,7 @@ export default function MainPage() {
         </div>
       </div>
 
+      {/* Drug Details Modal */}
       <Dialog open={!!selectedDrug} onOpenChange={() => setSelectedDrug(null)}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedDrug && (
@@ -1043,6 +1088,104 @@ export default function MainPage() {
         </DialogContent>
       </Dialog>
 
+      {/* News Details Modal */}
+      <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
+        <DialogContent 
+          className="max-h-[90vh] overflow-y-auto"
+          style={{ width: '95vw', maxWidth: 'none' }}
+        >
+          {selectedNews && (
+            <>
+              <DialogHeader>
+                <div className="flex items-start gap-4">
+                  {selectedNews.image_url ? (
+                    <img 
+                      src={selectedNews.image_url} 
+                      alt={selectedNews.title}
+                      className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                      }}
+                    />
+                  ) : null}
+                  <Avatar
+                    className={`h-16 w-16 shrink-0 ${selectedNews.image_url ? 'hidden' : ''}`}
+                    style={{
+                      backgroundColor: `${selectedNews.color}15`,
+                      color: selectedNews.color,
+                    }}
+                  >
+                    <AvatarFallback
+                      style={{
+                        backgroundColor: `${selectedNews.color}15`,
+                        color: selectedNews.color,
+                      }}
+                    >
+                      {selectedNews.icon}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        style={{
+                          backgroundColor: `${selectedNews.color}15`,
+                          color: selectedNews.color,
+                          borderColor: selectedNews.color,
+                        }}
+                      >
+                        {selectedNews.category}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">{selectedNews.date}</span>
+                      {selectedNews.is_translated && (
+                        <Badge variant="outline" className="text-xs">
+                          PL
+                        </Badge>
+                      )}
+                    </div>
+                    <DialogTitle className="text-2xl leading-tight">{selectedNews.title}</DialogTitle>
+                    <DialogDescription className="text-sm text-muted-foreground">
+                      Źródło: {selectedNews.source}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                <div className="prose prose-sm max-w-none">
+                  <h3 className="text-lg font-semibold mb-3">Opis</h3>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {selectedNews.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>Opublikowano: {selectedNews.date}</span>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.open(selectedNews.url, '_blank')}
+                      className="gap-2"
+                    >
+                      <Newspaper className="h-4 w-4" />
+                      Czytaj w źródle
+                    </Button>
+                    <Button 
+                      onClick={() => setSelectedNews(null)}
+                      variant="secondary"
+                    >
+                      Zamknij
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
       {/* Alternatives Modal */}
       <Dialog open={showAlternativesModal} onOpenChange={setShowAlternativesModal} modal={true}>
         <DialogContent className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 !w-[90vw] !h-[60vh] !max-w-[90vw] !max-h-[90vh] overflow-y-auto">

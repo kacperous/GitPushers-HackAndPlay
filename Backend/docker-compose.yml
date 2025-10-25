@@ -3,9 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:6543
+    command: ["/entrypoint.sh", "python", "manage.py", "runserver", "0.0.0.0:7654"]
     ports:
-      - "6543:6543"
+      - "7654:7654"
     environment:
       - BACKEND_SECRET_KEY=${BACKEND_SECRET_KEY}
       - POSTGRES_DB=${POSTGRES_DB}
@@ -21,6 +21,7 @@ services:
       - ./news/migrations:/app/news/migrations
       - ./scraper/migrations:/app/scraper/migrations
       - ./pharmac/migrations:/app/pharmac/migrations
+      - ./regulations/migrations:/app/regulations/migrations
     depends_on:
       db_hackathon:
         condition: service_healthy
