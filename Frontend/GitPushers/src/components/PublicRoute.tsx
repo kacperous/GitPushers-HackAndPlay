@@ -1,11 +1,11 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-interface ProtectedRouteProps {
+interface PublicRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   // Pokazuj loading podczas sprawdzania autoryzacji
@@ -17,12 +17,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  // Jeśli użytkownik jest zalogowany, przekieruj na stronę główną
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
-
+export default PublicRoute;

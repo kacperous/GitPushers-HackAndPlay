@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { authService } from "@/services/authService"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface LoginFormData {
   email: string
@@ -22,6 +22,7 @@ interface LoginPageProps {
 
 export default function LoginPage({ onLogin, onBackToHome, onGoToRegister }: LoginPageProps) {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -71,13 +72,10 @@ export default function LoginPage({ onLogin, onBackToHome, onGoToRegister }: Log
     setLoginError("")
 
     try {
-      // Use authService to login
-      const response = await authService.login({
-        email: formData.email,
-        password: formData.password,
-      })
+      // Use AuthContext to login
+      await login(formData.email, formData.password)
 
-      console.log("Login successful:", response)
+      console.log("Login successful")
       
       // Call parent callback if provided
       if (onLogin) {

@@ -204,9 +204,9 @@ export default function DrugDetailsPage() {
                   // Jeśli dokładnie 3 kafelki - mapa na dole, kafelki na górze w jednej linii
                   return (
                     <>
-                      {/* Kafelki w jednej linii */}
+                      {/* Kafelki w responsywnym gridzie */}
                       <div className="mb-6">
-                        <div className="grid gap-4 grid-cols-3">
+                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                           {drug.droga_podania_gatunek_tkanka_okres_karencji && (
                             <div className="flex items-start gap-3 p-4 border rounded-lg">
                               <FileText className="h-5 w-5 text-primary mt-0.5" />
@@ -350,7 +350,7 @@ export default function DrugDetailsPage() {
                       </div>
 
                       {/* 3 kafelki bez mapy */}
-                      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                         {/* Additional Info */}
                         <div className="space-y-4">
                           {drug.droga_podania_gatunek_tkanka_okres_karencji && (

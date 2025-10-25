@@ -3,7 +3,8 @@
 import type React from "react"
 import { useState } from "react"
 import { useNavigate } from 'react-router-dom'
-import { authService, type RegisterData } from "@/services/authService"
+import { useAuth } from "@/contexts/AuthContext"
+import type { RegisterData } from "@/services/authService"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +23,7 @@ interface RegisterPageProps {
 
 const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, onBackToHome }) => {
   const navigate = useNavigate()
+  const { register } = useAuth()
   const [formData, setFormData] = useState<RegisterFormData>({
     first_name: "",
     last_name: "",
@@ -92,8 +94,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
     setIsLoading(true)
     setRegisterError("")
     try {
-      const response = await authService.register(formData)
-      console.log("Registration successful:", response)
+      await register(formData)
+      console.log("Registration successful")
       
       // Call parent callback if provided
       if (onRegister) {
@@ -101,7 +103,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onBackToLogin, 
       }
 
       // Navigate to main page after successful registration
-      navigate('/main')
+      navigate('/')
     } catch (error) {
       setRegisterError(error instanceof Error ? error.message : "Wystąpił błąd podczas rejestracji. Spróbuj ponownie.")
     } finally {

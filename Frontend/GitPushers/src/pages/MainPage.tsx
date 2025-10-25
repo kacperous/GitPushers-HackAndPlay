@@ -16,7 +16,6 @@ import {
   LogIn,
   LogOut,
   User,
-  Menu,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
@@ -420,44 +419,29 @@ export default function MainPage() {
               />
             </div>
 
-            <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Button
                 variant={activeView === "drugs" ? "default" : "outline"}
                 onClick={() => setActiveView("drugs")}
                 className="gap-2"
+                size="sm"
               >
                 <Pill className="h-4 w-4" />
-                Leki
+                <span className="hidden sm:inline">Leki</span>
               </Button>
               <Button
                 variant={activeView === "news" ? "default" : "outline"}
                 onClick={() => setActiveView("news")}
                 className="gap-2"
+                size="sm"
               >
                 <Newspaper className="h-4 w-4" />
-                Newsy i Przepisy
+                <span className="hidden sm:inline">Newsy i Przepisy</span>
               </Button>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setActiveView("drugs")}>
-                  <Pill className="mr-2 h-4 w-4" />
-                  Leki
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveView("news")}>
-                  <Newspaper className="mr-2 h-4 w-4" />
-                  Newsy i Przepisy
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {!isLoadingUser && (
               currentUser ? (
@@ -496,7 +480,8 @@ export default function MainPage() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_350px]">
-          <div className="space-y-6">
+          {/* Sekcja leków - na desktop po lewej, na mobile po prawej */}
+          <div className="space-y-6 order-2 lg:order-1">
             {activeView === "drugs" ? (
               <>
                 <div className="space-y-4">
@@ -702,9 +687,9 @@ export default function MainPage() {
             ) : (
               <>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-3xl font-bold tracking-tight">Newsy i zmiany prawne</h2>
-                    <Badge variant="secondary">{filteredNews.length} artykułów</Badge>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Wiadomości ze świata medycyny</h2>
+                    <Badge variant="secondary" className="whitespace-nowrap">{filteredNews.length} artykułów</Badge>
                   </div>
 
                   <div className="flex flex-col gap-4 sm:flex-row">
@@ -718,10 +703,11 @@ export default function MainPage() {
                       />
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant={categoryFilter === "all" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => setCategoryFilter("all")}
                       >
                         Wszystkie
@@ -729,6 +715,7 @@ export default function MainPage() {
                       <Button
                         variant={categoryFilter === "Badania" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => setCategoryFilter("Badania")}
                       >
                         Badania
@@ -736,6 +723,7 @@ export default function MainPage() {
                       <Button
                         variant={categoryFilter === "Przepisy" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => setCategoryFilter("Przepisy")}
                       >
                         Przepisy
@@ -743,6 +731,7 @@ export default function MainPage() {
                       <Button
                         variant={categoryFilter === "Rynek" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => setCategoryFilter("Rynek")}
                       >
                         Rynek
@@ -750,6 +739,7 @@ export default function MainPage() {
                       <Button
                         variant={categoryFilter === "Technologia" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => setCategoryFilter("Technologia")}
                       >
                         Technologia
@@ -788,13 +778,13 @@ export default function MainPage() {
                         }}
                         onClick={() => setSelectedNews(news)}
                       >
-                        <CardContent className="p-6">
-                          <div className="flex gap-4">
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                             {news.image_url ? (
                               <img 
                                 src={news.image_url} 
                                 alt={news.title}
-                                className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                                className="h-12 w-12 shrink-0 rounded-lg object-cover self-start"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
                                   e.currentTarget.nextElementSibling?.classList.remove('hidden')
@@ -802,7 +792,7 @@ export default function MainPage() {
                               />
                             ) : null}
                             <Avatar
-                              className={`h-12 w-12 shrink-0 ${news.image_url ? 'hidden' : ''}`}
+                              className={`h-12 w-12 shrink-0 self-start ${news.image_url ? 'hidden' : ''}`}
                               style={{
                                 backgroundColor: `${news.color}15`,
                                 color: news.color,
@@ -818,9 +808,10 @@ export default function MainPage() {
                               </AvatarFallback>
                             </Avatar>
 
-                            <div className="flex-1 space-y-3">
-                              <div className="flex items-center gap-2">
+                            <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <Badge
+                                  className="text-xs sm:text-sm"
                                   style={{
                                     backgroundColor: `${news.color}15`,
                                     color: news.color,
@@ -829,16 +820,16 @@ export default function MainPage() {
                                 >
                                   {news.category}
                                 </Badge>
-                                <span className="text-sm text-muted-foreground">{news.date}</span>
+                                <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{news.date}</span>
                                 {news.is_translated && (
                                   <Badge variant="outline" className="text-xs">
                                     PL
                                   </Badge>
                                 )}
-                                <span className="text-xs text-muted-foreground">• {news.source}</span>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">• {news.source}</span>
                               </div>
                               <div className="space-y-2">
-                                <h3 className="text-xl font-semibold leading-tight">{news.title}</h3>
+                                <h3 className="text-base sm:text-xl font-semibold leading-tight break-words">{news.title}</h3>
                               </div>
                             </div>
                           </div>
@@ -861,7 +852,8 @@ export default function MainPage() {
             )}
           </div>
 
-          <div className="space-y-4">
+          {/* Sekcja wycofanych leków - na desktop po prawej, na mobile po lewej */}
+          <div className="space-y-4 order-1 lg:order-2">
             <Card className="sticky top-20">
               {activeView === "drugs" ? (
                 <>
@@ -992,10 +984,10 @@ export default function MainPage() {
                           displayRegulations.slice(0, 20).map((change) => (
                             <div
                               key={change.id}
-                              className={`border-b p-4 last:border-0 ${change.importance === "critical" ? "bg-destructive/5" : ""}`}
+                              className={`border-b p-3 sm:p-4 last:border-0 ${change.importance === "critical" ? "bg-destructive/5" : ""}`}
                             >
                               <div className="space-y-2">
-                                <div className="flex items-center justify-between gap-2">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
                                   <Badge
                                     variant={
                                       change.category === "UE"
@@ -1016,13 +1008,13 @@ export default function MainPage() {
                                     </Badge>
                                   )}
                                 </div>
-                                <h4 className="font-semibold text-sm leading-tight">{change.title}</h4>
-                                <p className="text-xs text-muted-foreground">{change.description}</p>
+                                <h4 className="font-semibold text-xs sm:text-sm leading-tight break-words">{change.title}</h4>
+                                <p className="text-xs text-muted-foreground break-words">{change.description}</p>
                                 <div className="flex items-center gap-2 text-xs">
-                                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                                  <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
                                   <span className="text-muted-foreground">Wejście: {change.effectiveDate}</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground italic">{change.source}</p>
+                                <p className="text-xs text-muted-foreground italic break-all">{change.source}</p>
                               </div>
                             </div>
                           ))
@@ -1039,19 +1031,16 @@ export default function MainPage() {
 
       {/* News Details Modal */}
       <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
-        <DialogContent 
-          className="max-h-[90vh] overflow-y-auto"
-          style={{ width: '95vw', maxWidth: 'none' }}
-        >
+        <DialogContent className="max-h-[90vh] overflow-y-auto w-[95vw] max-w-none p-4 sm:p-6">
           {selectedNews && (
             <>
               <DialogHeader>
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   {selectedNews.image_url ? (
                     <img 
                       src={selectedNews.image_url} 
                       alt={selectedNews.title}
-                      className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                      className="h-12 w-12 sm:h-16 sm:w-16 shrink-0 rounded-lg object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none'
                         e.currentTarget.nextElementSibling?.classList.remove('hidden')
@@ -1059,7 +1048,7 @@ export default function MainPage() {
                     />
                   ) : null}
                   <Avatar
-                    className={`h-16 w-16 shrink-0 ${selectedNews.image_url ? 'hidden' : ''}`}
+                    className={`h-12 w-12 sm:h-16 sm:w-16 shrink-0 ${selectedNews.image_url ? 'hidden' : ''}`}
                     style={{
                       backgroundColor: `${selectedNews.color}15`,
                       color: selectedNews.color,
@@ -1075,9 +1064,10 @@ export default function MainPage() {
                     </AvatarFallback>
                   </Avatar>
                   
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge
+                        className="text-xs sm:text-sm"
                         style={{
                           backgroundColor: `${selectedNews.color}15`,
                           color: selectedNews.color,
@@ -1086,47 +1076,50 @@ export default function MainPage() {
                       >
                         {selectedNews.category}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">{selectedNews.date}</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{selectedNews.date}</span>
                       {selectedNews.is_translated && (
                         <Badge variant="outline" className="text-xs">
                           PL
                         </Badge>
                       )}
                     </div>
-                    <DialogTitle className="text-2xl leading-tight">{selectedNews.title}</DialogTitle>
-                    <DialogDescription className="text-sm text-muted-foreground">
+                    <DialogTitle className="text-lg sm:text-2xl leading-tight break-words">{selectedNews.title}</DialogTitle>
+                    <DialogDescription className="text-xs sm:text-sm text-muted-foreground break-words">
                       Źródło: {selectedNews.source}
                     </DialogDescription>
                   </div>
                 </div>
               </DialogHeader>
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6 mt-4">
                 <div className="prose prose-sm max-w-none">
-                  <h3 className="text-lg font-semibold mb-3">Opis</h3>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Opis</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
                     {selectedNews.description}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Opublikowano: {selectedNews.date}</span>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 pt-3 sm:pt-4 border-t">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                    <span className="whitespace-nowrap">Opublikowano: {selectedNews.date}</span>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <Button 
                       variant="outline" 
                       onClick={() => window.open(selectedNews.url, '_blank')}
-                      className="gap-2"
+                      className="gap-2 w-full sm:w-auto justify-center"
+                      size="sm"
                     >
                       <Newspaper className="h-4 w-4" />
-                      Czytaj w źródle
+                      <span className="text-xs sm:text-sm">Czytaj w źródle</span>
                     </Button>
                     <Button 
                       onClick={() => setSelectedNews(null)}
                       variant="secondary"
+                      className="w-full sm:w-auto"
+                      size="sm"
                     >
                       Zamknij
                     </Button>
