@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ./entrypoint.sh python manage.py runserver 0.0.0.0:6543
+    command: ["/entrypoint.sh", "python", "manage.py", "runserver", "0.0.0.0:6543"]
     ports:
       - "6543:6543"
     environment:
