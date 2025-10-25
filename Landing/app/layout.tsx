@@ -7,9 +7,13 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "MedPlatform - Rozwiązania dla Lekarzy i Farmaceutów",
-  description: "Profesjonalna platforma medyczna dla lekarzy i farmaceutów",
-  generator: "v0.app",
+  title: "PharmaRadar",
+  description: "Twój portal do branży medycznej",
+  icons: {
+    icon: "/Pharma.png",
+    shortcut: "/Pharma.png",
+    apple: "/Pharma.png",
+  },
 }
 
 export default function RootLayout({
