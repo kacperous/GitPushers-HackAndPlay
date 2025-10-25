@@ -29,6 +29,21 @@ export default function DrugDetailsPage() {
   // Check if we should scroll to alternatives
   const shouldScrollToAlternatives = searchParams.get('scrollTo') === 'alternatives'
 
+  // Function to determine product color based on drug ID (consistent with MainPage)
+  const getProductColor = (drugId: number): 'red' | 'green' | 'neutral' => {
+    // Use the same logic as MainPage - every 3rd drug gets a color
+    // Convert drug ID to index-like behavior for consistency
+    const index = drugId - 1; // Assuming IDs start from 1
+    console.log('Drug ID:', drugId, 'Index:', index, 'Index % 3:', index % 3, 'Index % 6:', index % 6)
+    if (index % 3 === 0) {
+      const color = index % 6 === 0 ? 'red' : 'green'
+      console.log('Color determined:', color)
+      return color
+    }
+    console.log('Color determined: neutral')
+    return 'neutral'
+  }
+
   useEffect(() => {
     const fetchDrugDetails = async () => {
       if (!id) {
@@ -216,7 +231,13 @@ export default function DrugDetailsPage() {
                             <DollarSign className="h-5 w-5 text-primary" />
                             <div>
                               <p className="text-sm text-muted-foreground">Cena</p>
-                              <p className="text-xl font-semibold">{formattedPrice}</p>
+                              <p className={`text-xl font-semibold ${
+                                drug && getProductColor(drug.id) === 'red' ? 'text-red-600' : 
+                                drug && getProductColor(drug.id) === 'green' ? 'text-green-600' : 
+                                'text-primary'
+                              }`}>
+                                {formattedPrice}
+                              </p>
                             </div>
                           </div>
 
@@ -236,7 +257,10 @@ export default function DrugDetailsPage() {
                       <div>
                         <div className="p-4 border rounded-lg">
                           <div className="w-full">
-                            <PriceMap productPrice={parseFloat(drug.cena || '0')} />
+                            <PriceMap 
+                              productPrice={parseFloat(drug.cena || '0')} 
+                              productColor={getProductColor(drug.id)}
+                            />
                           </div>
                         </div>
                       </div>
@@ -273,7 +297,13 @@ export default function DrugDetailsPage() {
                             <DollarSign className="h-5 w-5 text-primary" />
                             <div>
                               <p className="text-sm text-muted-foreground">Cena</p>
-                              <p className="text-xl font-semibold">{formattedPrice}</p>
+                              <p className={`text-xl font-semibold ${
+                                drug && getProductColor(drug.id) === 'red' ? 'text-red-600' : 
+                                drug && getProductColor(drug.id) === 'green' ? 'text-green-600' : 
+                                'text-primary'
+                              }`}>
+                                {formattedPrice}
+                              </p>
                             </div>
                           </div>
 
@@ -293,7 +323,10 @@ export default function DrugDetailsPage() {
                       <div>
                         <div className="p-4 border rounded-lg">
                           <div className="w-full">
-                            <PriceMap productPrice={parseFloat(drug.cena || '0')} />
+                            <PriceMap 
+                              productPrice={parseFloat(drug.cena || '0')} 
+                              productColor={getProductColor(drug.id)}
+                            />
                           </div>
                         </div>
                       </div>
@@ -308,7 +341,10 @@ export default function DrugDetailsPage() {
                         <div className="p-4 border rounded-lg">
                           <h3 className="text-lg font-semibold mb-3">Mapa cen w okolicy</h3>
                           <div className="w-full">
-                            <PriceMap productPrice={parseFloat(drug.cena || '0')} />
+                            <PriceMap 
+                              productPrice={parseFloat(drug.cena || '0')} 
+                              productColor={getProductColor(drug.id)}
+                            />
                           </div>
                         </div>
                       </div>
@@ -344,7 +380,13 @@ export default function DrugDetailsPage() {
                             <DollarSign className="h-5 w-5 text-primary" />
                             <div>
                               <p className="text-sm text-muted-foreground">Cena</p>
-                              <p className="text-xl font-semibold">{formattedPrice}</p>
+                              <p className={`text-xl font-semibold ${
+                                drug && getProductColor(drug.id) === 'red' ? 'text-red-600' : 
+                                drug && getProductColor(drug.id) === 'green' ? 'text-green-600' : 
+                                'text-primary'
+                              }`}>
+                                {formattedPrice}
+                              </p>
                             </div>
                           </div>
                         </div>

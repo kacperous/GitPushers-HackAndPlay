@@ -346,6 +346,14 @@ export default function MainPage() {
     return text.substring(0, maxLength) + "..."
   }
 
+  // Function to determine product color based on index
+  const getProductColor = (index: number): 'red' | 'green' | 'neutral' => {
+    if (index % 3 === 0) {
+      return index % 6 === 0 ? 'red' : 'green'
+    }
+    return 'neutral'
+  }
+
   // Filter API drugs
   const filteredApiDrugs = apiDrugs.filter((drug) => {
     const searchLower = drugSearch.toLowerCase()
@@ -546,15 +554,28 @@ export default function MainPage() {
                 ) : (
                   <>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      {paginatedDrugs.map((drug) => {
+                      {paginatedDrugs.map((drug, index) => {
                         const isLowStock = drugService.isLowStock(drug.ilosc)
                         const displayName = drugService.getDrugDisplayName(drug)
                         const formattedPrice = drugService.getFormattedPrice(drug.cena)
+                        const productColor = getProductColor(index)
+                        
+                        // Determine card styling based on color
+                        const getCardStyling = () => {
+                          switch (productColor) {
+                            case 'red':
+                              return 'border-red-200 bg-red-50/30 hover:border-red-300 hover:bg-red-50/50'
+                            case 'green':
+                              return 'border-green-200 bg-green-50/30 hover:border-green-300 hover:bg-green-50/50'
+                            default:
+                              return 'hover:shadow-md'
+                          }
+                        }
                         
                         return (
                           <Card
                             key={drug.id}
-                            className="cursor-pointer transition-all hover:shadow-md"
+                            className={`cursor-pointer transition-all ${getCardStyling()}`}
                             onClick={() => navigate(`/details/${drug.id}`)}
                           >
                             <CardHeader>
@@ -596,7 +617,13 @@ export default function MainPage() {
                                 <div className="flex items-center justify-between pt-2 border-t">
                                   <div className="flex items-center gap-2">
                                     <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-lg font-bold text-primary">{formattedPrice}</span>
+                                    <span className={`text-lg font-bold ${
+                                      productColor === 'red' ? 'text-red-600' : 
+                                      productColor === 'green' ? 'text-green-600' : 
+                                      'text-primary'
+                                    }`}>
+                                      {formattedPrice}
+                                    </span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Package className="h-4 w-4 text-muted-foreground" />

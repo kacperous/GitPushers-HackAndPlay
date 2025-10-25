@@ -28,20 +28,40 @@ const mapOptions = {
 };
 
 // --- FUNKCJA DO GENEROWANIA LOSOWYCH MARKERÓW ---
-const generateRandomMarkers = (productPrice: number, centerLat: number, centerLng: number) => {
+const generateRandomMarkers = (
+  productPrice: number, 
+  centerLat: number, 
+  centerLng: number,
+  productColor: 'red' | 'green' | 'neutral' = 'neutral'
+) => {
   const markers = [];
-  const markerCount = Math.floor(Math.random() * 6) + 3; // 3-8 markerów
+  const markerCount = Math.floor(Math.random() * 8) + 8; // 8-15 markerów
   
   for (let i = 0; i < markerCount; i++) {
-    // Generuj losową cenę w zakresie ±20%
-    const priceVariation = (Math.random() - 0.5) * 0.4; // -0.2 do +0.2
+    // Generuj losową cenę na podstawie koloru produktu
+    let priceVariation: number;
+    switch (productColor) {
+      case 'red':
+        // Ceny niższe niż bazowa (markery tańsze)
+        priceVariation = Math.random() * -0.4 - 0.3; // -30% do -70%
+        break;
+      case 'green':
+        // Ceny wyższe niż bazowa (markery droższe)
+        priceVariation = Math.random() * 0.5 + 0.2; // +20% do +70%
+        break;
+      default: // neutral
+        // Ceny w zakresie ±5%
+        priceVariation = (Math.random() - 0.5) * 0.1; // -5% do +5%
+        break;
+    }
+    
     const randomPrice = productPrice * (1 + priceVariation);
     
     // Zaokrąglij do pełnej liczby i dodaj 0.99
     const roundedPrice = Math.floor(randomPrice) + 0.99;
     
     // Generuj losową pozycję w promieniu 4km
-    const radiusKm = Math.random() * 4; // 0-4km
+    const radiusKm = Math.random() * 10; // 0-10km
     const angle = Math.random() * 2 * Math.PI; // 0-2π
     
     // Konwersja km na stopnie (przybliżenie)
@@ -64,6 +84,7 @@ const generateRandomMarkers = (productPrice: number, centerLat: number, centerLn
 
 interface PriceMapProps {
   productPrice?: number;
+  productColor?: 'red' | 'green' | 'neutral';
 }
 
 interface PriceMarkerProps {
@@ -114,11 +135,11 @@ const CustomPriceMarker: React.FC<PriceMarkerProps> = ({ price }) => {
 /**
  * Główny komponent mapy
  */
-const PriceMap: React.FC<PriceMapProps> = ({ productPrice = 50 }) => {
+const PriceMap: React.FC<PriceMapProps> = ({ productPrice = 50, productColor = 'neutral' }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   
-  // Generuj losowe markery na podstawie ceny produktu
-  const markers = generateRandomMarkers(productPrice, center.lat, center.lng);
+  // Generuj losowe markery na podstawie ceny produktu i koloru
+  const markers = generateRandomMarkers(productPrice, center.lat, center.lng, productColor);
 
   // 3. Używamy haka useLoadScript zamiast komponentu <LoadScript>
   const { isLoaded, loadError } = useLoadScript({
