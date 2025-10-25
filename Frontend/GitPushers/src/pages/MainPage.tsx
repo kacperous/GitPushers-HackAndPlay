@@ -1186,6 +1186,9 @@ export default function MainPage() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
       {/* Alternatives Modal */}
       <Dialog open={showAlternativesModal} onOpenChange={setShowAlternativesModal} modal={true}>
         <DialogContent className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 !w-[90vw] !h-[60vh] !max-w-[90vw] !max-h-[90vh] overflow-y-auto">

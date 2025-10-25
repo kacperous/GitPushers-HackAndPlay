@@ -10,7 +10,8 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid';
+
+
 
 const HomePage: React.FC = () => {
   const [count, setCount] = useState(0);
@@ -59,9 +60,9 @@ const HomePage: React.FC = () => {
 
       {/* Główna zawartość */}
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-        <Grid container spacing={3}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
           {/* Karta 1 */}
-          <Grid item xs={12} md={6}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' } }}>
             <Card variant="outlined" sx={{ minHeight: 200 }}>
               <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
@@ -79,10 +80,10 @@ const HomePage: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Karta 2 */}
-          <Grid item xs={12} md={6}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' } }}>
             <Card variant="outlined" sx={{ minHeight: 200 }}>
               <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
@@ -102,10 +103,10 @@ const HomePage: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Karta 3 - Demonstracja shadcn/ui */}
-          <Grid item xs={12}>
+          <Box sx={{ flex: '1 1 100%' }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
@@ -124,8 +125,8 @@ const HomePage: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );
