@@ -6,6 +6,10 @@ import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 export function CTASection() {
   const { ref, isVisible } = useScrollAnimation(0.2)
+  
+  const handleRedirect = () => {
+    window.location.href = 'https://app.pharmaradar.pl'
+  }
 
   return (
     <section ref={ref as React.RefObject<HTMLElement>} className="py-16 md:py-24 bg-primary text-primary-foreground">
@@ -14,7 +18,7 @@ export function CTASection() {
         <p className="text-lg text-primary-foreground/90 max-w-2xl mx-auto">
           Dołącz do tysięcy farmaceutów, którzy już korzystają z PharmaRadar i oszczędzają czas każdego dnia.
         </p>
-        <Button size="lg" variant="secondary" className="gap-2 text-base transition-transform hover:scale-105 duration-200">
+        <Button size="lg" variant="secondary" className="gap-2 text-base transition-transform hover:scale-105 duration-200" onClick={handleRedirect}>
           Wypróbuj za darmo
           <ArrowRight className="h-4 w-4" />
         </Button>
