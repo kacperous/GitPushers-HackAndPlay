@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ('contenttypes', '0002_remove_content_type_name'),
         ('auth', '0012_alter_user_first_name_max_length'),
     ]
 
