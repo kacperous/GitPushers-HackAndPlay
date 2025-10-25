@@ -71,7 +71,9 @@ class DrugService {
     if (isNaN(numPrice)) {
       return 'Brak ceny';
     }
-    return `${numPrice.toFixed(2)} PLN`;
+    // Round down to integer and add .99
+    const roundedPrice = Math.floor(numPrice) + 0.99;
+    return `${roundedPrice.toFixed(2)} PLN`;
   }
 }
 

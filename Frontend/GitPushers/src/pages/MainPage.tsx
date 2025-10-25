@@ -8,6 +8,7 @@ import { authService, type UserData } from "@/services/authService"
 import { drugService, type DrugFromAPI } from "@/services/drugService"
 import { drugEventService, type DrugEvent } from "@/services/drugEventService"
 import { newsService, type NewsFromAPI } from "@/services/newsService"
+import { regulationService, type RegulationFromAPI } from "@/services/regulationService"
 import {
   Search,
   Pill,
@@ -39,25 +40,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 // ============= TYPY =============
-interface Alternative {
-  name: string
-  composition: string
-  price: string
-  manufacturer: string
-  availability: "Dostępny" | "Ograniczona dostępność" | "Niedostępny"
-}
-
-interface Drug {
-  id: number
-  name: string
-  composition: string
-  price: string
-  manufacturer: string
-  category: string
-  prescription: boolean
-  alternatives: Alternative[]
-}
-
 interface NewsItem {
   id: number
   title: string
@@ -85,63 +67,6 @@ interface LegalChange {
 
 // drugUpdates will be loaded from API
 
-const legalChanges: LegalChange[] = [
-  {
-    id: 1,
-    title: "Nowe przepisy UE o antybiotykach",
-    description: "Zaostrzenie wymogów przepisywania antybiotyków w całej UE",
-    effectiveDate: "01.11.2025",
-    category: "UE",
-    importance: "critical",
-    source: "Rozporządzenie UE 2025/1847",
-  },
-  {
-    id: 2,
-    title: "Zmiana listy refundacyjnej NFZ",
-    description: "Aktualizacja listy leków refundowanych - 47 nowych pozycji",
-    effectiveDate: "01.12.2025",
-    category: "NFZ",
-    importance: "high",
-    source: "Obwieszczenie MZ",
-  },
-  {
-    id: 3,
-    title: "Nowe wymogi dla aptek internetowych",
-    description: "Obowiązek weryfikacji tożsamości przy zakupie leków Rx online",
-    effectiveDate: "15.11.2025",
-    category: "GIF",
-    importance: "critical",
-    source: "Komunikat GIF 2025/10",
-  },
-  {
-    id: 4,
-    title: "Ustawa o zawodzie farmaceuty - nowelizacja",
-    description: "Rozszerzenie kompetencji farmaceutów o szczepienia",
-    effectiveDate: "01.01.2026",
-    category: "Krajowe",
-    importance: "high",
-    source: "Ustawa z dn. 15.09.2025",
-  },
-  {
-    id: 5,
-    title: "Nowe standardy przechowywania leków termolabilnych",
-    description: "Zaostrzenie wymogów dotyczących łańcucha chłodniczego",
-    effectiveDate: "20.11.2025",
-    category: "GIF",
-    importance: "medium",
-    source: "Wytyczne GIF 2025/08",
-  },
-  {
-    id: 6,
-    title: "Zmiany w systemie e-recepty",
-    description: "Wprowadzenie obowiązkowej e-recepty dla wszystkich leków Rx",
-    effectiveDate: "01.03.2026",
-    category: "NFZ",
-    importance: "high",
-    source: "Rozporządzenie MZ",
-  },
-]
-
 // ============= KOMPONENT GŁÓWNY =============
 export default function MainPage() {
   const navigate = useNavigate()
@@ -149,7 +74,6 @@ export default function MainPage() {
   const [drugSearch, setDrugSearch] = useState("")
   const [newsFilter, setNewsFilter] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null)
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
@@ -172,6 +96,12 @@ export default function MainPage() {
   const [isLoadingNews, setIsLoadingNews] = useState(true)
   const [newsError, setNewsError] = useState<string | null>(null)
 
+  // State for API regulations
+  const [apiRegulations, setApiRegulations] = useState<RegulationFromAPI[]>([])
+  const [isLoadingRegulations, setIsLoadingRegulations] = useState(true)
+  const [regulationsError, setRegulationsError] = useState<string | null>(null)
+
+
   // State for alternatives modal
   const [showAlternativesModal, setShowAlternativesModal] = useState(false)
   const [selectedDrugName, setSelectedDrugName] = useState<string>("")
@@ -189,7 +119,7 @@ export default function MainPage() {
       moc: "500 mg",
       droga_podania: "doustna",
       producent: "US Pharmacia",
-      cena: "12.50 PLN",
+      cena: "12.99 PLN",
       stan: 145,
       isLowStock: false
     },
@@ -199,7 +129,7 @@ export default function MainPage() {
       moc: "500 mg",
       droga_podania: "doustna",
       producent: "Polpharma",
-      cena: "8.90 PLN",
+      cena: "8.99 PLN",
       stan: 234,
       isLowStock: false
     },
@@ -209,7 +139,7 @@ export default function MainPage() {
       moc: "500 mg",
       droga_podania: "doustna",
       producent: "GSK",
-      cena: "15.20 PLN",
+      cena: "15.99 PLN",
       stan: 3,
       isLowStock: true
     },
@@ -219,7 +149,7 @@ export default function MainPage() {
       moc: "500 mg",
       droga_podania: "doustna",
       producent: "Bristol-Myers Squibb",
-      cena: "18.70 PLN",
+      cena: "18.99 PLN",
       stan: 89,
       isLowStock: false
     },
@@ -229,7 +159,7 @@ export default function MainPage() {
       moc: "1000 mg",
       droga_podania: "doustna",
       producent: "Sandoz",
-      cena: "16.40 PLN",
+      cena: "16.99 PLN",
       stan: 2,
       isLowStock: true
     }
@@ -286,13 +216,17 @@ export default function MainPage() {
   // Pobierz aktualizacje leków z API
   useEffect(() => {
     const fetchDrugUpdates = async () => {
+      console.log('Checking authentication:', authService.isAuthenticated())
       if (!authService.isAuthenticated()) {
+        console.log('User not authenticated, skipping drug updates')
         setIsLoadingDrugUpdates(false)
         return
       }
 
       try {
+        console.log('Fetching drug updates...')
         const events = await drugEventService.getRecentEvents(10)
+        console.log('Drug updates fetched:', events)
         setDrugUpdates(events)
       } catch (error) {
         console.error("Błąd pobierania aktualizacji leków:", error)
@@ -321,6 +255,28 @@ export default function MainPage() {
     }
 
     fetchNews()
+  }, [])
+
+  // Pobierz przepisy prawne z API
+  useEffect(() => {
+    const fetchRegulations = async () => {
+      try {
+        const regulations = await regulationService.getAllRegulations({
+          limit: 20 // Maksymalnie 20 elementów
+        })
+        
+        console.log('Fetched regulations:', regulations, 'Type:', typeof regulations, 'Is Array:', Array.isArray(regulations))
+        setApiRegulations(regulations)
+        setRegulationsError(null)
+      } catch (error) {
+        console.error("Błąd pobierania przepisów prawnych:", error)
+        setRegulationsError(error instanceof Error ? error.message : "Nie udało się pobrać listy przepisów prawnych")
+      } finally {
+        setIsLoadingRegulations(false)
+      }
+    }
+
+    fetchRegulations()
   }, [])
 
   const handleLogout = () => {
@@ -422,7 +378,34 @@ export default function MainPage() {
   })
 
   const highPriorityUpdates = drugUpdates.filter((u) => drugEventService.getEventPriority(u.event_type) === "high").length
-  const criticalLegalChanges = legalChanges.filter((c) => c.importance === "critical").length
+  
+  // Convert API regulations to display format
+  console.log('apiRegulations before map:', apiRegulations, 'Type:', typeof apiRegulations, 'Is Array:', Array.isArray(apiRegulations))
+  
+  let displayRegulations: LegalChange[] = []
+  try {
+    if (Array.isArray(apiRegulations)) {
+      displayRegulations = apiRegulations.map((regulation) => {
+        const category = regulationService.getCategory(regulation.podstawa_wydania)
+        const importance = regulationService.getImportance(regulation.podstawa_wydania)
+        
+        return {
+          id: regulation.id,
+          title: regulationService.getDisplayTitle(regulation),
+          description: regulationService.getDisplayDescription(regulation),
+          effectiveDate: regulationService.formatPlannedDate(regulation.planowany_termin_wydania_data),
+          category,
+          importance,
+          source: regulation.nr_w_wykazie
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error mapping regulations:', error)
+    displayRegulations = []
+  }
+
+  const criticalLegalChanges = displayRegulations.filter((c) => c.importance === "critical").length
 
   return (
     <div className="min-h-screen bg-background">
@@ -990,43 +973,60 @@ export default function MainPage() {
                   <CardContent className="p-0">
                     <ScrollArea className="h-[calc(100vh-200px)]">
                       <div className="space-y-1">
-                        {legalChanges.map((change) => (
-                          <div
-                            key={change.id}
-                            className={`border-b p-4 last:border-0 ${change.importance === "critical" ? "bg-destructive/5" : ""}`}
-                          >
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between gap-2">
-                                <Badge
-                                  variant={
-                                    change.category === "UE"
-                                      ? "default"
-                                      : change.category === "GIF"
-                                        ? "destructive"
-                                        : change.category === "NFZ"
-                                          ? "secondary"
-                                          : "outline"
-                                  }
-                                  className="text-xs"
-                                >
-                                  {change.category}
-                                </Badge>
-                                {change.importance === "critical" && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    Krytyczne
-                                  </Badge>
-                                )}
-                              </div>
-                              <h4 className="font-semibold text-sm leading-tight">{change.title}</h4>
-                              <p className="text-xs text-muted-foreground">{change.description}</p>
-                              <div className="flex items-center gap-2 text-xs">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-muted-foreground">Wejście: {change.effectiveDate}</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground italic">{change.source}</p>
-                            </div>
+                        {isLoadingRegulations ? (
+                          <div className="p-8 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                            <p className="text-xs text-muted-foreground">Ładowanie...</p>
                           </div>
-                        ))}
+                        ) : regulationsError ? (
+                          <div className="p-8 text-center">
+                            <AlertTriangle className="mx-auto h-8 w-8 text-destructive mb-2" />
+                            <p className="text-sm text-destructive">Błąd ładowania</p>
+                            <p className="text-xs text-muted-foreground">{regulationsError}</p>
+                          </div>
+                        ) : displayRegulations.length === 0 ? (
+                          <div className="p-8 text-center">
+                            <p className="text-sm text-muted-foreground">Brak przepisów prawnych</p>
+                          </div>
+                        ) : (
+                          displayRegulations.slice(0, 20).map((change) => (
+                            <div
+                              key={change.id}
+                              className={`border-b p-4 last:border-0 ${change.importance === "critical" ? "bg-destructive/5" : ""}`}
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                  <Badge
+                                    variant={
+                                      change.category === "UE"
+                                        ? "default"
+                                        : change.category === "GIF"
+                                          ? "destructive"
+                                          : change.category === "NFZ"
+                                            ? "secondary"
+                                            : "outline"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {change.category}
+                                  </Badge>
+                                  {change.importance === "critical" && (
+                                    <Badge variant="destructive" className="text-xs">
+                                      Krytyczne
+                                    </Badge>
+                                  )}
+                                </div>
+                                <h4 className="font-semibold text-sm leading-tight">{change.title}</h4>
+                                <p className="text-xs text-muted-foreground">{change.description}</p>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-muted-foreground">Wejście: {change.effectiveDate}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground italic">{change.source}</p>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </ScrollArea>
                   </CardContent>
@@ -1036,84 +1036,6 @@ export default function MainPage() {
           </div>
         </div>
       </div>
-
-      {/* Drug Details Modal */}
-      <Dialog open={!!selectedDrug} onOpenChange={() => setSelectedDrug(null)}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          {selectedDrug && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-2xl">{selectedDrug.name}</DialogTitle>
-                <DialogDescription className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge>{selectedDrug.category}</Badge>
-                    {selectedDrug.prescription && <Badge variant="secondary">Lek na receptę</Badge>}
-                  </div>
-                  <div className="text-sm">
-                    <p>
-                      <strong>Skład:</strong> {selectedDrug.composition}
-                    </p>
-                    <p>
-                      <strong>Producent:</strong> {selectedDrug.manufacturer}
-                    </p>
-                  </div>
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <Card className="bg-primary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="text-base font-medium text-muted-foreground">Cena</span>
-                      <span className="text-4xl font-bold text-primary">{selectedDrug.price}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div>
-                  <h3 className="mb-4 text-lg font-semibold">Alternatywne leki ({selectedDrug.alternatives.length})</h3>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nazwa</TableHead>
-                          <TableHead>Skład</TableHead>
-                          <TableHead>Producent</TableHead>
-                          <TableHead className="text-right">Cena</TableHead>
-                          <TableHead>Dostępność</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {selectedDrug.alternatives.map((alt, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{alt.name}</TableCell>
-                            <TableCell className="text-sm">{alt.composition}</TableCell>
-                            <TableCell className="text-sm">{alt.manufacturer}</TableCell>
-                            <TableCell className="text-right font-bold text-primary">{alt.price}</TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  alt.availability === "Dostępny"
-                                    ? "default"
-                                    : alt.availability === "Ograniczona dostępność"
-                                      ? "secondary"
-                                      : "destructive"
-                                }
-                              >
-                                {alt.availability}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* News Details Modal */}
       <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
